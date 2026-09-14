@@ -1,98 +1,376 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Navid - Personal Portfolio</title>
-    <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>idc — Fire Protection &amp; Mechanical Engineering Toolkit</title>
+<meta name="description" content="Sheet index for a fire protection and mechanical engineering toolkit: NFPA field reference, fire alarm battery/NAC calculator, HVAC design suite, and consultant study set.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --canvas:#101B24;
+    --canvas-deep:#0B141B;
+    --grid-minor: rgba(217,227,235,0.035);
+    --grid-major: rgba(217,227,235,0.07);
+    --paper:#EDE8D9;
+    --paper-shade:#E1DAC5;
+    --ink:#1B2229;
+    --ink-soft:#5B6873;
+    --ink-faint:#8B95A0;
+    --rule:#33424E;
+    --rule-soft:#22303A;
+    --lamp:#E3A63C;
+    --lamp-soft:#8C6423;
+    --stamp:#8A3B2F;
+    --display:'Oswald', 'Arial Narrow', sans-serif;
+    --body:'Inter', system-ui, -apple-system, sans-serif;
+    --mono:'IBM Plex Mono', 'Courier New', monospace;
+    --radius: 3px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--canvas);
+    color:var(--paper);
+    font-family:var(--body);
+    font-size:15px;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit;}
+
+  .canvas{
+    min-height:100vh;
+    background-image:
+      linear-gradient(var(--grid-major) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-major) 1px, transparent 1px),
+      linear-gradient(var(--grid-minor) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-minor) 1px, transparent 1px),
+      radial-gradient(ellipse 1100px 500px at 18% -8%, #16232E 0%, var(--canvas) 60%);
+    background-size:200px 200px, 200px 200px, 20px 20px, 20px 20px, cover;
+    background-position:-1px -1px, -1px -1px, -1px -1px, -1px -1px, 0 0;
+    padding:38px 34px 30px;
+  }
+
+  /* ================= Title block ================= */
+  .titleblock{
+    border:1.5px solid var(--rule);
+    border-bottom:3px solid var(--lamp);
+    background:linear-gradient(180deg, #14212B 0%, #101B24 100%);
+    border-radius:2px;
+    padding:26px 28px 20px;
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:28px;
+    align-items:end;
+    max-width:1180px;
+    margin:0 auto;
+    animation:settle .5s ease-out;
+  }
+  @keyframes settle{
+    from{opacity:0; transform:translateY(-6px);}
+    to{opacity:1; transform:translateY(0);}
+  }
+  .tb-eyebrow{
+    font-family:var(--mono);
+    font-size:11px;
+    letter-spacing:.14em;
+    color:var(--lamp);
+    text-transform:uppercase;
+    margin:0 0 10px;
+  }
+  .titleblock h1{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:clamp(28px, 4vw, 42px);
+    line-height:1.08;
+    letter-spacing:.01em;
+    margin:0 0 10px;
+    color:var(--paper);
+    text-transform:uppercase;
+    max-width:14ch;
+  }
+  .tb-sub{
+    margin:0;
+    color:var(--ink-faint);
+    max-width:52ch;
+    font-size:14.5px;
+  }
+  .tb-fields{
+    border-collapse:collapse;
+    font-family:var(--mono);
+    font-size:12px;
+    white-space:nowrap;
+  }
+  .tb-fields th,.tb-fields td{
+    border:1px solid var(--rule-soft);
+    padding:6px 12px;
+    text-align:left;
+    font-weight:400;
+  }
+  .tb-fields th{
+    color:var(--ink-faint);
+    background:#0D161D;
+    letter-spacing:.04em;
+  }
+  .tb-fields td{
+    color:var(--paper);
+  }
+
+  /* ================= Main ================= */
+  main{max-width:1180px; margin:0 auto;}
+  .lead{
+    font-family:var(--mono);
+    font-size:12.5px;
+    color:var(--ink-faint);
+    letter-spacing:.02em;
+    max-width:70ch;
+    margin:26px 2px 22px;
+  }
+  .lead strong{color:var(--lamp); font-weight:500;}
+
+  .sheet-grid{
+    display:grid;
+    grid-template-columns:repeat(2, 1fr);
+    gap:18px;
+  }
+
+  .sheet{
+    --accent:#8A3B2F;
+    position:relative;
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:2px;
+    border:1px solid var(--paper-shade);
+    border-left:5px solid var(--accent);
+    padding:20px 22px 60px;
+    box-shadow:0 1px 0 rgba(0,0,0,.25), 0 10px 24px -18px rgba(0,0,0,.6);
+    transition:transform .15s ease, box-shadow .15s ease;
+  }
+  .sheet:hover, .sheet:focus-within{
+    transform:translateY(-3px);
+    box-shadow:0 1px 0 rgba(0,0,0,.25), 0 16px 30px -16px rgba(0,0,0,.65), 0 0 0 1px var(--accent);
+  }
+
+  .sheet-tab{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:14px;
+  }
+  .sheet-no{
+    font-family:var(--mono);
+    font-weight:500;
+    font-size:13px;
+    letter-spacing:.05em;
+    color:var(--accent);
+    background:rgba(0,0,0,.05);
+    border:1px solid currentColor;
+    border-radius:2px;
+    padding:2px 8px;
+  }
+  .sheet-kind{
+    font-family:var(--mono);
+    font-size:10.5px;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+  }
+
+  .sheet h2{
+    font-family:var(--display);
+    font-weight:600;
+    font-size:19px;
+    line-height:1.22;
+    margin:0 0 9px;
+    color:var(--ink);
+    text-wrap:balance;
+  }
+  .sheet p{
+    margin:0;
+    font-size:13.5px;
+    line-height:1.55;
+    color:#3A4550;
+    max-width:46ch;
+  }
+
+  .open{
+    position:absolute;
+    left:22px;
+    bottom:20px;
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    font-family:var(--mono);
+    font-size:12px;
+    font-weight:500;
+    letter-spacing:.02em;
+    color:var(--ink);
+    text-decoration:none;
+    border-bottom:1px solid var(--ink-soft);
+    padding-bottom:2px;
+  }
+  .sheet:hover .open, .open:focus-visible{
+    color:var(--accent);
+    border-color:var(--accent);
+  }
+  .open svg{width:13px; height:13px; transition:transform .15s ease;}
+  .sheet:hover .open svg{transform:translateX(3px);}
+
+  a:focus-visible, .open:focus-visible{
+    outline:2px solid var(--lamp);
+    outline-offset:3px;
+  }
+
+  /* ================= Footer / legend ================= */
+  .tb-footer{
+    max-width:1180px;
+    margin:26px auto 0;
+    border-top:1.5px solid var(--rule);
+    padding-top:16px;
+    display:grid;
+    grid-template-columns:auto 1fr auto;
+    gap:22px;
+    align-items:center;
+  }
+  .legend{
+    display:flex;
+    flex-wrap:wrap;
+    gap:14px;
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-faint);
+  }
+  .legend span{display:inline-flex; align-items:center; gap:6px;}
+  .legend i{width:9px; height:9px; border-radius:1px; display:inline-block;}
+
+  .foot-note{
+    font-family:var(--mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    line-height:1.6;
+    max-width:60ch;
+  }
+
+  .scale{display:flex; align-items:center; gap:6px;}
+  .scale svg{display:block;}
+
+  @media (max-width:760px){
+    .canvas{padding:22px 16px 24px;}
+    .titleblock{grid-template-columns:1fr; padding:20px 18px 16px;}
+    .tb-fields{font-size:11px;}
+    .sheet-grid{grid-template-columns:1fr;}
+    .tb-footer{grid-template-columns:1fr; text-align:left;}
+  }
+
+  @media (prefers-reduced-motion:reduce){
+    .titleblock{animation:none;}
+    .sheet{transition:none;}
+  }
+</style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="nav-brand">Navid</div>
-            <ul class="nav-links">
-                <li><a href="#home">Home</a></li>
-                <li><a href="#about">About</a></li>
-                <li><a href="#projects">Projects</a></li>
-                <li><a href="#contact">Contact</a></li>
-            </ul>
-        </div>
-    </nav>
+<div class="canvas">
 
-    <section id="home" class="hero">
-        <div class="container">
-            <div class="hero-content">
-                <h1>Hi, I'm Navid</h1>
-                <p class="subtitle">Developer • Designer • Creator</p>
-                <p class="description">Welcome to my personal website. I build amazing things on the web.</p>
-                <a href="#projects" class="btn btn-primary">View My Work</a>
-            </div>
-        </div>
-    </section>
+  <header class="titleblock">
+    <div>
+      <p class="tb-eyebrow">Sheet index — issued for reference</p>
+      <h1>Fire Protection &amp; Mechanical Engineering Toolkit</h1>
+      <p class="tb-sub">Four self-contained calculation and reference tools for standpipe, sprinkler, fire alarm, and HVAC work — built for daily field and design use.</p>
+    </div>
+    <table class="tb-fields">
+      <tr><th>Prepared by</th><td>idc — Fire Protection Engineer</td></tr>
+      <tr><th>Discipline</th><td>Fire Protection · Life Safety · Mechanical</td></tr>
+      <tr><th>Sheets</th><td>4 of 4</td></tr>
+      <tr><th>Revision</th><td id="rev-date">—</td></tr>
+    </table>
+  </header>
 
-    <section id="about" class="about">
-        <div class="container">
-            <h2>About Me</h2>
-            <p>I'm a passionate developer with experience in web development. I love creating beautiful and functional websites that solve real problems.</p>
-            <div class="skills">
-                <div class="skill-item">
-                    <h3>Frontend</h3>
-                    <p>HTML, CSS, JavaScript, React</p>
-                </div>
-                <div class="skill-item">
-                    <h3>Backend</h3>
-                    <p>Node.js, Python, Databases</p>
-                </div>
-                <div class="skill-item">
-                    <h3>Tools</h3>
-                    <p>Git, GitHub, VS Code</p>
-                </div>
-            </div>
-        </div>
-    </section>
+  <main>
+    <p class="lead">Every sheet below is a single HTML file — <strong>no install, no account, no data leaves the page</strong>. Open one on desktop or phone and it runs on its own.</p>
 
-    <section id="projects" class="projects">
-        <div class="container">
-            <h2>Featured Projects</h2>
-            <div class="projects-grid">
-                <div class="project-card">
-                    <div class="project-header">Project One</div>
-                    <p>A brief description of your first project goes here.</p>
-                    <a href="#" class="project-link">Learn More →</a>
-                </div>
-                <div class="project-card">
-                    <div class="project-header">Project Two</div>
-                    <p>A brief description of your second project goes here.</p>
-                    <a href="#" class="project-link">Learn More →</a>
-                </div>
-                <div class="project-card">
-                    <div class="project-header">Project Three</div>
-                    <p>A brief description of your third project goes here.</p>
-                    <a href="#" class="project-link">Learn More →</a>
-                </div>
-            </div>
-        </div>
-    </section>
+    <div class="sheet-grid">
 
-    <section id="contact" class="contact">
-        <div class="container">
-            <h2>Get In Touch</h2>
-            <p>Feel free to reach out to me for collaborations or just a friendly hello!</p>
-            <div class="contact-links">
-                <a href="mailto:your.email@example.com" class="contact-link">Email</a>
-                <a href="https://github.com" class="contact-link">GitHub</a>
-                <a href="https://twitter.com" class="contact-link">Twitter</a>
-                <a href="https://linkedin.com" class="contact-link">LinkedIn</a>
-            </div>
+      <article class="sheet" style="--accent:#B23A2E">
+        <div class="sheet-tab">
+          <span class="sheet-no">FA-101</span>
+          <span class="sheet-kind">Calculator</span>
         </div>
-    </section>
+        <h2>Fire Alarm Battery &amp; NAC Voltage Drop</h2>
+        <p>Standby/alarm battery sizing and notification-circuit voltage-drop calculations for addressable fire alarm systems, worked to NFPA 72.</p>
+        <a class="open" href="fire_alarm_battery_NAC_voltage_drop_.html">Open sheet
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </article>
 
-    <footer class="footer">
-        <div class="container">
-            <p>&copy; 2024 Navid. All rights reserved.</p>
+      <article class="sheet" style="--accent:#3E6B49">
+        <div class="sheet-tab">
+          <span class="sheet-no">FR-101</span>
+          <span class="sheet-kind">Field reference</span>
         </div>
-    </footer>
+        <h2>NFPA Fire Protection Field Reference</h2>
+        <p>Quick-lookup guide to NFPA 13, 14, 20 and 72 criteria — spacing, hydraulics, pump and alarm requirements — organized for jobsite and desk use.</p>
+        <a class="open" href="fire_rules_V3.html">Open sheet
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </article>
 
-    <script src="script.js"></script>
+      <article class="sheet" style="--accent:#6B4FA0">
+        <div class="sheet-tab">
+          <span class="sheet-no">FP-101</span>
+          <span class="sheet-kind">Study set</span>
+        </div>
+        <h2>Fire Protection Consultant Mastery</h2>
+        <p>Self-paced walkthrough from fundamentals through NFPA 13/14/20/24/72/101 and Saudi SBC 201/801, with diagrams, quizzes and consultant review drills.</p>
+        <a class="open" href="fire_protection_consultant_mastery_all_levels.html">Open sheet
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </article>
+
+      <article class="sheet" style="--accent:#2F5C82">
+        <div class="sheet-tab">
+          <span class="sheet-no">HV-101</span>
+          <span class="sheet-kind">Design tool</span>
+        </div>
+        <h2>HVAC Design Suite</h2>
+        <p>Zone load calculation, energy and operating-cost estimation, and equipment sizing — a self-contained tool in the spirit of Carrier's Hourly Analysis Program.</p>
+        <a class="open" href="hvac_design_suite_V6.html">Open sheet
+          <svg viewBox="0 0 16 16" fill="none"><path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </a>
+      </article>
+
+    </div>
+  </main>
+
+  <footer class="tb-footer">
+    <div class="scale" aria-hidden="true">
+      <svg width="86" height="14" viewBox="0 0 86 14">
+        <line x1="1" y1="7" x2="85" y2="7" stroke="#33424E" stroke-width="1"/>
+        <line x1="1" y1="2" x2="1" y2="12" stroke="#33424E" stroke-width="1"/>
+        <line x1="43" y1="4" x2="43" y2="10" stroke="#33424E" stroke-width="1"/>
+        <line x1="85" y1="2" x2="85" y2="12" stroke="#33424E" stroke-width="1"/>
+        <rect x="1" y="6" width="42" height="2" fill="#33424E"/>
+      </svg>
+    </div>
+    <div class="legend">
+      <span><i style="background:#B23A2E"></i>Fire alarm</span>
+      <span><i style="background:#3E6B49"></i>Field reference</span>
+      <span><i style="background:#6B4FA0"></i>Study set</span>
+      <span><i style="background:#2F5C82"></i>Mechanical</span>
+    </div>
+    <div class="foot-note">
+      Reference and field-study aids only. Verify all values against the governing NFPA/SBC edition and the engineer of record's stamped design.
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  document.getElementById('rev-date').textContent = new Date().toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }).toUpperCase();
+</script>
 </body>
 </html>

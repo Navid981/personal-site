@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fire Alarm Battery &amp; NAC Voltage Drop Calculator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#12151a;
+  --panel:#1a1f27;
+  --panel-alt:#20262f;
+  --panel-raised:#242b35;
+  --border:#2d333d;
+  --border-soft:#242a33;
+  --text:#e8eaed;
+  --text-dim:#9aa4b2;
+  --text-faint:#5b6472;
+  --amber:#f0a93c;
+  --amber-dim:#8a6a2e;
+  --green:#3ecf6e;
+  --red:#e0524a;
+  --blue:#5b9bd9;
+  --mono:'IBM Plex Mono', ui-monospace, monospace;
+  --sans:'IBM Plex Sans', system-ui, sans-serif;
+  --display:'Space Grotesk', var(--sans);
+  --radius:8px;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(ellipse 1200px 600px at 50% -10%, #1c2129 0%, var(--bg) 55%);
+  color:var(--text);
+  font-family:var(--sans);
+  font-size:14px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  padding-bottom:80px;
+}
+a{color:var(--amber);}
+
+/* ---------------- topbar ---------------- */
+.topbar{
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg, #171b21 0%, #14171d 100%);
+  padding:22px 28px 0 28px;
+  position:sticky; top:0; z-index:50;
+  box-shadow:0 8px 24px -12px rgba(0,0,0,.6);
+}
+.topbar-inner{max-width:1180px;margin:0 auto;}
+.brand-row{display:flex; align-items:flex-start; justify-content:space-between; gap:24px; flex-wrap:wrap;}
+.brand-plate{display:flex; align-items:center; gap:14px;}
+.led-strip{display:flex; gap:6px; flex-direction:column; align-items:center;}
+.led{
+  width:9px;height:9px;border-radius:50%;
+  background:var(--green);
+  box-shadow:0 0 6px 1px rgba(62,207,110,.7), inset 0 0 2px rgba(0,0,0,.4);
+  animation:pulse 3.2s ease-in-out infinite;
+}
+.led.amber{background:var(--amber); box-shadow:0 0 6px 1px rgba(240,169,60,.7), inset 0 0 2px rgba(0,0,0,.4); animation-delay:.6s;}
+.led.dim{background:#3a4048; box-shadow:none; animation:none;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.45;}}
+.brand-text h1{
+  font-family:var(--display); font-weight:700; font-size:19px; letter-spacing:.01em;
+  margin:0; color:var(--text);
+}
+.brand-text .tag{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--amber); margin-top:3px;
+}
+.brand-sub{
+  font-size:12.5px; color:var(--text-dim); max-width:360px; text-align:right; padding-top:4px;
+}
+.brand-sub strong{color:var(--text-dim); font-weight:600;}
+
+/* tabs */
+.tabs{display:flex; gap:2px; margin-top:20px; overflow-x:auto;}
+.tab-btn{
+  font-family:var(--mono); font-size:12px; letter-spacing:.04em;
+  background:transparent; border:none; color:var(--text-faint);
+  padding:11px 18px; cursor:pointer; white-space:nowrap;
+  border-bottom:2px solid transparent;
+  transition:color .15s ease, border-color .15s ease, background .15s ease;
+  text-transform:uppercase;
+}
+.tab-btn:hover{color:var(--text-dim); background:rgba(255,255,255,.02);}
+.tab-btn.active{color:var(--amber); border-bottom:2px solid var(--amber);}
+.tab-btn .num{color:var(--text-faint); margin-right:8px;}
+.tab-btn.active .num{color:var(--amber-dim);}
+
+/* ---------------- layout ---------------- */
+main{max-width:1180px; margin:0 auto; padding:28px 28px 0 28px;}
+.view{display:none; animation:fadein .25s ease;}
+.view.active{display:block;}
+@keyframes fadein{from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:translateY(0);}}
+
+.card{
+  background:linear-gradient(180deg, var(--panel) 0%, var(--panel-alt) 100%);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  margin-bottom:20px;
+  overflow:hidden;
+}
+.card-head{
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+  padding:13px 18px;
+  background:var(--panel-raised);
+  border-bottom:1px solid var(--border);
+}
+.card-head h2{
+  font-family:var(--display); font-size:13.5px; font-weight:600;
+  letter-spacing:.04em; text-transform:uppercase; color:var(--text); margin:0;
+  display:flex; align-items:center; gap:9px;
+}
+.card-head h2 .step-num{
+  font-family:var(--mono); font-size:11px; color:var(--bg); background:var(--amber);
+  width:20px;height:20px;border-radius:4px; display:inline-flex; align-items:center; justify-content:center;
+  flex:none;
+}
+.card-body{padding:18px;}
+.card-note{font-size:12px; color:var(--text-faint); padding:0 18px 16px 18px; line-height:1.55;}
+
+/* ---------------- tables ---------------- */
+.tbl-wrap{overflow-x:auto; border-radius:6px; border:1px solid var(--border-soft);}
+table.data{width:100%; border-collapse:collapse; font-size:12.5px; min-width:640px;}
+table.data th{
+  font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--text-faint); text-align:left; padding:9px 10px;
+  background:var(--panel-raised); border-bottom:1px solid var(--border);
+  white-space:nowrap; position:sticky; top:0;
+}
+table.data td{
+  padding:6px 8px; border-bottom:1px solid var(--border-soft); vertical-align:middle;
+}
+table.data tbody tr:hover{background:rgba(255,255,255,.015);}
+table.data tbody tr.base-row{background:rgba(255,255,255,.02); color:var(--text-faint);}
+table.data tfoot td{
+  padding:10px 8px; font-family:var(--mono); font-weight:600; border-top:1px solid var(--border);
+  background:var(--panel-raised);
+}
+td.num, th.num{text-align:right;}
+td.center, th.center{text-align:center;}
+
+input.cell, select.cell{
+  width:100%; min-width:56px;
+  background:var(--bg); border:1px solid var(--border); color:var(--amber);
+  font-family:var(--mono); font-size:12.5px; border-radius:4px;
+  padding:5px 7px; outline:none; transition:border-color .12s ease, box-shadow .12s ease;
+}
+input.cell.text-cell{color:var(--text); min-width:130px;}
+input.cell:focus, select.cell:focus{border-color:var(--amber); box-shadow:0 0 0 2px rgba(240,169,60,.15);}
+input.cell::-webkit-outer-spin-button, input.cell::-webkit-inner-spin-button{opacity:.4;}
+select.cell{color:var(--text); cursor:pointer;}
+
+.computed{font-family:var(--mono); color:var(--text-dim);}
+.computed.strong{color:var(--text); font-weight:600;}
+
+.row-del{
+  background:transparent; border:1px solid var(--border); color:var(--text-faint);
+  width:24px; height:24px; border-radius:5px; cursor:pointer; line-height:1;
+  font-size:14px; display:inline-flex; align-items:center; justify-content:center;
+}
+.row-del:hover{border-color:var(--red); color:var(--red);}
+
+.tbl-actions{display:flex; justify-content:space-between; align-items:center; padding:11px 18px; background:var(--panel);}
+.btn{
+  font-family:var(--mono); font-size:11.5px; letter-spacing:.03em; text-transform:uppercase;
+  background:var(--panel-raised); border:1px solid var(--border); color:var(--text-dim);
+  padding:8px 14px; border-radius:5px; cursor:pointer; transition:all .12s ease;
+}
+.btn:hover{border-color:var(--amber); color:var(--amber);}
+.btn.primary{background:var(--amber); border-color:var(--amber); color:#1a1305; font-weight:600;}
+.btn.primary:hover{background:#f7b658;}
+.btn.ghost{background:transparent;}
+
+/* ---------------- inputs grid (settings) ---------------- */
+.grid-inputs{display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:14px 18px;}
+.field{display:flex; flex-direction:column; gap:6px;}
+.field label{
+  font-size:11.5px; color:var(--text-dim); font-weight:500; display:flex; align-items:center; gap:6px;
+}
+.field .hint{font-size:10.5px; color:var(--text-faint); line-height:1.4; margin-top:1px;}
+.field input, .field select{
+  background:var(--bg); border:1px solid var(--border); color:var(--amber);
+  font-family:var(--mono); font-size:13.5px; padding:9px 10px; border-radius:6px; outline:none;
+}
+.field input:focus, .field select:focus{border-color:var(--amber); box-shadow:0 0 0 2px rgba(240,169,60,.15);}
+.field.readout input, .field.readout .ro-value{color:var(--text); }
+.ro-value{
+  background:var(--panel-raised); border:1px solid var(--border); border-radius:6px;
+  padding:9px 10px; font-family:var(--mono); font-size:14px; font-weight:600; color:var(--amber);
+}
+
+/* ---------------- readout / results strip ---------------- */
+.readout-strip{display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:1px; background:var(--border); border:1px solid var(--border); border-radius:6px; overflow:hidden;}
+.readout{background:var(--panel); padding:14px 16px;}
+.readout .label{font-size:10px; letter-spacing:.05em; text-transform:uppercase; color:var(--text-faint); font-family:var(--mono);}
+.readout .value{font-family:var(--mono); font-size:21px; font-weight:600; color:var(--text); margin-top:4px;}
+.readout .unit{font-size:11px; color:var(--text-faint); margin-left:3px; font-weight:400;}
+.readout.key .value{color:var(--amber);}
+
+/* ---------------- LED status ---------------- */
+.status-pill{
+  display:inline-flex; align-items:center; gap:7px;
+  font-family:var(--mono); font-size:11px; font-weight:600; letter-spacing:.04em;
+  padding:4px 10px 4px 8px; border-radius:20px; text-transform:uppercase;
+}
+.status-pill .dot{width:8px;height:8px;border-radius:50%;}
+.status-pill.pass{background:rgba(62,207,110,.1); color:var(--green); border:1px solid rgba(62,207,110,.3);}
+.status-pill.pass .dot{background:var(--green); box-shadow:0 0 6px 1px rgba(62,207,110,.8);}
+.status-pill.fail{background:rgba(224,82,74,.1); color:var(--red); border:1px solid rgba(224,82,74,.3);}
+.status-pill.fail .dot{background:var(--red); box-shadow:0 0 6px 1px rgba(224,82,74,.8);}
+.status-pill.idle{background:rgba(255,255,255,.03); color:var(--text-faint); border:1px solid var(--border);}
+.status-pill.idle .dot{background:var(--text-faint);}
+
+.status-banner{
+  display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;
+  padding:18px 20px; border-radius:8px; border:1px solid var(--border);
+  background:var(--panel-raised);
+}
+.status-banner .msg{font-size:13px; color:var(--text-dim);}
+.status-banner .msg strong{color:var(--text); font-family:var(--mono);}
+.big-led{display:flex; align-items:center; gap:12px;}
+.big-led .ring{
+  width:16px;height:16px;border-radius:50%; flex:none;
+}
+.big-led .ring.pass{background:var(--green); box-shadow:0 0 16px 4px rgba(62,207,110,.65);}
+.big-led .ring.fail{background:var(--red); box-shadow:0 0 16px 4px rgba(224,82,74,.65);}
+.big-led .txt{font-family:var(--display); font-weight:700; font-size:16px; letter-spacing:.02em;}
+.big-led .txt.pass{color:var(--green);}
+.big-led .txt.fail{color:var(--red);}
+
+/* ---------------- instructions ---------------- */
+.step-list{list-style:none; margin:0; padding:0; counter-reset:step;}
+.step-list li{
+  counter-increment:step;
+  display:flex; gap:14px; padding:13px 0; border-bottom:1px solid var(--border-soft);
+}
+.step-list li:last-child{border-bottom:none;}
+.step-list li::before{
+  content:counter(step);
+  font-family:var(--mono); font-size:11px; font-weight:600; color:var(--amber);
+  background:rgba(240,169,60,.1); border:1px solid rgba(240,169,60,.3);
+  width:24px; height:24px; border-radius:50%; flex:none;
+  display:flex; align-items:center; justify-content:center; margin-top:1px;
+}
+.step-list p{margin:0; font-size:13px; color:var(--text-dim); line-height:1.6;}
+.step-list strong{color:var(--text);}
+
+.callout{
+  border-left:3px solid var(--amber); background:rgba(240,169,60,.06);
+  padding:12px 16px; border-radius:0 6px 6px 0; font-size:12.5px; color:var(--text-dim); line-height:1.6; margin-top:14px;
+}
+.callout.red{border-left-color:var(--red); background:rgba(224,82,74,.06);}
+.callout strong{color:var(--text);}
+
+.legend-row{display:flex; gap:18px; flex-wrap:wrap; padding:14px 18px; font-size:11.5px; color:var(--text-dim);}
+.legend-item{display:flex; align-items:center; gap:7px;}
+.swatch{width:13px;height:13px;border-radius:3px; border:1px solid var(--border);}
+.swatch.input{background:var(--bg); border-color:var(--amber);}
+.swatch.computed{background:var(--panel-raised);}
+.swatch.pass{background:rgba(62,207,110,.25); border-color:var(--green);}
+.swatch.fail{background:rgba(224,82,74,.25); border-color:var(--red);}
+
+/* footer */
+.footer-note{
+  max-width:1180px; margin:32px auto 0 auto; padding:0 28px 24px 28px;
+  font-size:11px; color:var(--text-faint); line-height:1.6; text-align:center;
+}
+
+/* responsive */
+@media (max-width:720px){
+  .topbar{padding:18px 16px 0 16px;}
+  main{padding:20px 16px 0 16px;}
+  .brand-sub{display:none;}
+  .card-body{padding:14px;}
+}
+::-webkit-scrollbar{height:8px; width:8px;}
+::-webkit-scrollbar-thumb{background:var(--border); border-radius:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+
+@media print{
+  body{background:#fff; color:#000;}
+  .topbar{position:static; box-shadow:none;}
+  .tabs{display:none;}
+  .view{display:block !important;}
+  .card{break-inside:avoid;}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand-row">
+      <div class="brand-plate">
+        <div class="led-strip">
+          <div class="led"></div>
+          <div class="led amber"></div>
+        </div>
+        <div class="brand-text">
+          <h1>Fire Alarm Battery &amp; NAC Voltage Drop Calculator</h1>
+          <div class="tag">NFPA 72 &middot; UL 864 &middot; NEC Ch.9 Table 8</div>
+        </div>
+      </div>
+      <div class="brand-sub">Standby/alarm battery sizing and point-to-point NAC voltage drop, worked to standard fire alarm design methodology. <strong>Verify against project data before use.</strong></div>
+    </div>
+    <nav class="tabs">
+      <button class="tab-btn active" data-view="instructions"><span class="num">00</span>Instructions</button>
+      <button class="tab-btn" data-view="battery"><span class="num">01</span>Battery Calc</button>
+      <button class="tab-btn" data-view="nac"><span class="num">02</span>NAC Voltage Drop</button>
+      <button class="tab-btn" data-view="wire"><span class="num">03</span>Wire Data</button>
+    </nav>
+  </div>
+</div>
+
+<main>
+
+  <!-- ================= INSTRUCTIONS ================= -->
+  <section class="view active" id="view-instructions">
+
+    <div class="card">
+      <div class="card-head"><h2>How to use this tool</h2></div>
+      <div class="card-body">
+        <p style="color:var(--text-dim); font-size:13px; line-height:1.7; margin:0 0 12px 0;">
+          <strong style="color:var(--text)">Battery Calc</strong> — enter device standby/alarm current draw, durations, and charger rating; battery size and recharge check update live.<br>
+          <strong style="color:var(--text)">NAC Voltage Drop</strong> — enter circuit voltage parameters and devices in circuit order (nearest to farthest from the panel); the NAC total current flows automatically into Battery Calc.<br>
+          <strong style="color:var(--text)">Wire Data</strong> — reference table of conductor resistance and standard battery sizes used by both calculators.
+        </p>
+      </div>
+      <div class="legend-row" style="border-top:1px solid var(--border);">
+        <div class="legend-item"><span class="swatch input"></span> Amber text = editable input</div>
+        <div class="legend-item"><span class="swatch computed"></span> Computed automatically</div>
+        <div class="legend-item"><span class="swatch pass"></span> PASS</div>
+        <div class="legend-item"><span class="swatch fail"></span> FAIL — revise design</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2><span class="step-num">1</span>Battery Standby Calculation — Method</h2></div>
+      <div class="card-body" style="padding-bottom:6px;">
+        <ol class="step-list">
+          <li><p><strong>Standby load</strong> — sum the current draw (A) of every device in its normal, non-alarm condition (panel, detectors, modules, supervisory circuit current).</p></li>
+          <li><p><strong>Alarm load</strong> — sum the current draw (A) of every device with the system in alarm, worst case (all NACs/relays that could operate simultaneously, plus continuing standby loads).</p></li>
+          <li><p><strong>Durations</strong> — standby duration is typically 24 hours; alarm duration is 5 minutes minimum for non-voice systems, 15 minutes for voice/mass-notification systems (NFPA 72 Table 4.4.1) — confirm with the AHJ.</p></li>
+          <li><p><strong>Required Ah</strong> = (Standby Current &times; Standby Hours) + (Alarm Current &times; Alarm Hours).</p></li>
+          <li><p>Apply an <strong>aging/derating factor</strong> (commonly 1.2, i.e. 20%) to the required Ah to get the minimum battery capacity.</p></li>
+          <li><p>Select the <strong>next standard battery size</strong> at or above the derated requirement (7, 12, 18, 26, 33, 55, 80, 100 Ah).</p></li>
+          <li><p>Confirm the <strong>battery charger</strong> can recharge the battery to 80% capacity within the code-required window (typically 48 hours) while still carrying the standby load.</p></li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2><span class="step-num">2</span>NAC Voltage Drop — Method (Point-to-Point)</h2></div>
+      <div class="card-body" style="padding-bottom:6px;">
+        <ol class="step-list">
+          <li><p>Confirm circuit configuration: <strong>Class B</strong> (Style Y, one-way, single fed run) or <strong>Class A</strong> (Style Z, two-way loop). See Class A note below.</p></li>
+          <li><p>Determine the starting <strong>cut-off voltage</strong>: UL 864 9th Edition requires secondary/battery power to supply no less than 85% of nominal voltage (24V nominal &rarr; 20.4V). The panel/power supply then has its own internal drop between that 85% value and its actual NAC terminal output (typically 0.5&ndash;2.5 VDC, panel-specific) &mdash; get this figure from the manufacturer in writing; it is rarely published. <strong>Cut-off voltage = (Nominal &times; 0.85) &minus; Internal Panel Drop.</strong></p></li>
+          <li><p>List devices in the order they appear on the circuit, with the wire distance from the previous device (or from the panel for the first device).</p></li>
+          <li><p>Look up <strong>round-trip wire resistance</strong> (&Omega;/1000 ft) for the installed conductor gauge and stranding (solid vs. stranded resistance differs) from the Wire Data tab &mdash; sourced from NEC Chapter 9, Table 8.</p></li>
+          <li><p><strong>Point-to-point (PTP) method</strong>: the current in each wire segment equals the sum of that device's current plus every device further downstream (current decreases as devices are passed) &mdash; this is what panel manufacturers use in their own calculation programs. The simpler End-of-Line (EOL) method assumes full circuit current the entire distance and is more conservative; differences of roughly 30% between the two methods are common. This tool uses PTP.</p></li>
+          <li><p>Segment voltage drop = Segment Current &times; Segment Resistance &times; (Segment Distance / 1000). Cumulative voltage drop = running total back to the panel.</p></li>
+          <li><p>Voltage at each device = Cut-Off Voltage (Step 2, <em>not</em> nominal 24V) &minus; Cumulative Voltage Drop.</p></li>
+          <li><p>Compare to the device's minimum listed operating voltage (UL listing/datasheet &mdash; commonly at least 16V, varies by manufacturer/candela). PASS if voltage at device &ge; minimum required.</p></li>
+          <li><p>If any device fails: increase wire gauge, add a NAC extender/booster power supply closer to the zone, split the circuit into shorter runs, or reduce device count/candela on that run.</p></li>
+        </ol>
+        <div class="callout">
+          <strong>Class A (Style Z) note:</strong> this tool calculates the worst-case single-open-conductor fault condition, where the circuit is fed from one direction only — the standard conservative design check required by NFPA 72, since the circuit must still operate correctly under a single wire-to-wire fault. Under normal (no-fault) Class A operation the two feeds share the load and drop is lower.
+        </div>
+        <div class="callout red">
+          This tool is a calculation aid, not a substitute for a licensed design professional's review, the manufacturer's own battery/voltage-drop tools, or AHJ approval. Sample device rows are placeholders — replace with actual project data. NFPA 72 (2013 ed.) &sect;7.2.1 requires documentation of system calculations including voltage drop — keep a record of your inputs with the project file.
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ================= BATTERY CALC ================= -->
+  <section class="view" id="view-battery">
+
+    <div class="card">
+      <div class="card-head">
+        <h2>1 &middot; Standby &amp; Alarm Connected Load</h2>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data" id="battery-table">
+          <thead>
+            <tr>
+              <th style="width:28px;">#</th>
+              <th>Component / Device</th>
+              <th class="center" style="width:64px;">Qty</th>
+              <th class="num" style="width:110px;">Standby (A ea)</th>
+              <th class="num" style="width:110px;">Alarm (A ea)</th>
+              <th class="num" style="width:100px;">Standby &Sigma;</th>
+              <th class="num" style="width:100px;">Alarm &Sigma;</th>
+              <th style="width:32px;"></th>
+            </tr>
+          </thead>
+          <tbody id="battery-tbody"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" style="text-align:right;">TOTAL CONNECTED LOAD</td>
+              <td class="num" id="bt-total-standby">—</td>
+              <td class="num" id="bt-total-alarm">—</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="tbl-actions">
+        <button class="btn" id="battery-add-row">+ Add device row</button>
+        <span style="font-size:11px; color:var(--text-faint);">Sample rows are placeholders — edit freely. NAC row is linked live to the NAC Voltage Drop tab.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>2 &middot; Standby &amp; Alarm Duration Requirements</h2></div>
+      <div class="card-body">
+        <div class="grid-inputs">
+          <div class="field">
+            <label for="in-standby-hours">Required standby duration</label>
+            <input type="number" id="in-standby-hours" value="24" step="0.5" min="0">
+            <div class="hint">hours — typically 24 hr for most protected premises systems (NFPA 72 Table 4.4.1)</div>
+          </div>
+          <div class="field">
+            <label for="in-alarm-min">Required alarm duration</label>
+            <input type="number" id="in-alarm-min" value="5" step="1" min="0">
+            <div class="hint">minutes — 5 min min. (non-voice); 15 min for voice/mass notification</div>
+          </div>
+          <div class="field readout">
+            <label>Alarm duration (converted)</label>
+            <div class="ro-value" id="ro-alarm-hours">0.0833 hr</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>3 &middot; Required Battery Capacity</h2></div>
+      <div class="card-body">
+        <div class="readout-strip">
+          <div class="readout"><div class="label">Total Standby Current</div><div class="value" id="ro-total-standby">—<span class="unit">A</span></div></div>
+          <div class="readout"><div class="label">Total Alarm Current</div><div class="value" id="ro-total-alarm">—<span class="unit">A</span></div></div>
+          <div class="readout"><div class="label">Standby Ah</div><div class="value" id="ro-standby-ah">—<span class="unit">Ah</span></div></div>
+          <div class="readout"><div class="label">Alarm Ah</div><div class="value" id="ro-alarm-ah">—<span class="unit">Ah</span></div></div>
+          <div class="readout key"><div class="label">Required Ah</div><div class="value" id="ro-required-ah">—<span class="unit">Ah</span></div></div>
+        </div>
+        <div class="grid-inputs" style="margin-top:16px;">
+          <div class="field">
+            <label for="in-derate">Aging / derating factor</label>
+            <input type="number" id="in-derate" value="1.2" step="0.05" min="1">
+            <div class="hint">typically 1.2 (20% derate) per common design practice — confirm with AHJ</div>
+          </div>
+          <div class="field readout">
+            <label>Battery capacity required (derated)</label>
+            <div class="ro-value" id="ro-battery-required" style="color:var(--amber); font-size:16px;">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>4 &middot; Standard Battery Selection</h2></div>
+      <div class="card-body">
+        <div class="readout-strip">
+          <div class="readout key"><div class="label">Selected Standard Size</div><div class="value" id="ro-selected-battery">—<span class="unit">Ah</span></div></div>
+        </div>
+        <div class="hint" style="margin-top:8px;">From Wire Data tab standard catalog sizes (7 / 12 / 18 / 26 / 33 / 55 / 80 / 100 Ah). Confirm exact model and UL listing availability with the manufacturer selected for this project.</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>5 &middot; Battery Charger Recharge Check</h2></div>
+      <div class="card-body">
+        <div class="grid-inputs">
+          <div class="field">
+            <label for="in-charger-rating">Charger rated output current</label>
+            <input type="number" id="in-charger-rating" value="3" step="0.1" min="0">
+            <div class="hint">A — from panel/charger data sheet</div>
+          </div>
+          <div class="field">
+            <label for="in-recharge-req">Required recharge time</label>
+            <input type="number" id="in-recharge-req" value="48" step="1" min="0">
+            <div class="hint">hours — NFPA 72 typical max. (some supervising-station configs require 24 hr)</div>
+          </div>
+          <div class="field readout">
+            <label>Available charging current</label>
+            <div class="ro-value" id="ro-charger-avail">—</div>
+          </div>
+          <div class="field readout">
+            <label>Approx. time to recharge to 80%</label>
+            <div class="ro-value" id="ro-recharge-time">—</div>
+          </div>
+        </div>
+        <div style="margin-top:16px;">
+          <span class="status-pill idle" id="charger-status-pill"><span class="dot"></span>—</span>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ================= NAC VOLTAGE DROP ================= -->
+  <section class="view" id="view-nac">
+
+    <div class="card">
+      <div class="card-head"><h2>1 &middot; Circuit Parameters</h2></div>
+      <div class="card-body">
+        <div class="grid-inputs">
+          <div class="field">
+            <label for="nac-id">Circuit designation</label>
+            <input type="text" id="nac-id" value="NAC-1">
+          </div>
+          <div class="field">
+            <label for="nac-type">Circuit type</label>
+            <select id="nac-type">
+              <option>Class B</option>
+              <option>Class A</option>
+            </select>
+            <div class="hint">Style Y (Class B) or Style Z (Class A) — see Instructions for Class A note</div>
+          </div>
+          <div class="field">
+            <label for="nac-nominal">Nominal system voltage</label>
+            <input type="number" id="nac-nominal" value="24" step="1" min="0">
+            <div class="hint">V — 24V or 12V nominal, per panel/power supply</div>
+          </div>
+          <div class="field">
+            <label for="nac-derate">UL 864 secondary power derate</label>
+            <input type="number" id="nac-derate" value="0.85" step="0.01" min="0" max="1">
+            <div class="hint">UL 864 9th Ed. — secondary/battery power must supply &ge; 85% of nominal</div>
+          </div>
+          <div class="field readout">
+            <label>Derated starting voltage</label>
+            <div class="ro-value" id="ro-derated-v">—</div>
+          </div>
+          <div class="field">
+            <label for="nac-panel-drop">Panel internal voltage drop</label>
+            <input type="number" id="nac-panel-drop" value="1.0" step="0.1" min="0">
+            <div class="hint">V — typ. 0.5&ndash;2.5 VDC, panel-specific — get from manufacturer in writing</div>
+          </div>
+          <div class="field readout">
+            <label>NAC terminal cut-off voltage</label>
+            <div class="ro-value" id="ro-cutoff-v" style="color:var(--amber); font-size:15px;">—</div>
+          </div>
+          <div class="field">
+            <label for="nac-gauge">Wire gauge / stranding</label>
+            <select id="nac-gauge"></select>
+            <div class="hint">selects resistance from Wire Data tab (NEC Ch.9 Table 8)</div>
+          </div>
+          <div class="field readout">
+            <label>Round-trip wire resistance</label>
+            <div class="ro-value" id="ro-wire-res">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>2 &middot; Device-by-Device Voltage Drop</h2></div>
+      <div class="tbl-wrap">
+        <table class="data" id="nac-table">
+          <thead>
+            <tr>
+              <th style="width:26px;">#</th>
+              <th style="min-width:150px;">Device ID / Label</th>
+              <th class="num" style="width:90px;">Seg. Dist (ft)</th>
+              <th class="num" style="width:90px;">Unit I (A)</th>
+              <th class="num" style="width:90px;">Seg. I (A)</th>
+              <th class="num" style="width:90px;">Seg. R (&Omega;)</th>
+              <th class="num" style="width:90px;">Seg. VD (V)</th>
+              <th class="num" style="width:90px;">Cum. VD (V)</th>
+              <th class="num" style="width:90px;">V at Device</th>
+              <th class="num" style="width:80px;">Min V Req.</th>
+              <th class="num" style="width:80px;">Margin</th>
+              <th class="center" style="width:90px;">Status</th>
+              <th style="width:32px;"></th>
+            </tr>
+          </thead>
+          <tbody id="nac-tbody"></tbody>
+        </table>
+      </div>
+      <div class="tbl-actions">
+        <button class="btn" id="nac-add-row">+ Add device row</button>
+        <span style="font-size:11px; color:var(--text-faint);">Enter devices in true circuit (wiring) order — nearest panel first.</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>3 &middot; Circuit Summary</h2></div>
+      <div class="card-body">
+        <div class="readout-strip" style="margin-bottom:16px;">
+          <div class="readout key"><div class="label">Total NAC Circuit Current</div><div class="value" id="ro-nac-total-i">—<span class="unit">A</span></div></div>
+          <div class="readout"><div class="label">Worst-Case Device Voltage</div><div class="value" id="ro-nac-worst-v">—<span class="unit">V</span></div></div>
+          <div class="readout"><div class="label">Worst-Case Margin</div><div class="value" id="ro-nac-worst-margin">—<span class="unit">V</span></div></div>
+        </div>
+        <div class="status-banner">
+          <div class="msg">Overall circuit status — all devices must clear their minimum required voltage.</div>
+          <div class="big-led" id="nac-overall-led">
+            <div class="ring"></div>
+            <div class="txt">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ================= WIRE DATA ================= -->
+  <section class="view" id="view-wire">
+
+    <div class="card">
+      <div class="card-head"><h2>Copper Conductor Resistance</h2></div>
+      <div class="tbl-wrap">
+        <table class="data" id="wire-table">
+          <thead>
+            <tr><th>AWG / Stranding</th><th class="num">One-Way (&Omega;/1000 ft)</th><th class="num">Round-Trip (&Omega;/1000 ft)</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="card-note">
+        Source: NEC Chapter 9, Table 8 — Conductor Properties, DC resistance, uncoated copper, at 75&deg;C (as referenced in NFPA-72-based fire alarm voltage-drop design references). Stranded conductors run slightly higher resistance than solid of the same gauge — select the row matching your actual installed cable. Verify against your specific cable manufacturer's data sheet, especially for shielded or FPLR-rated fire alarm cable.
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-head"><h2>Standard Sealed Lead-Acid Battery Sizes</h2></div>
+      <div class="card-body">
+        <div class="readout-strip">
+          <div class="readout"><div class="value" style="font-size:16px;">7&ensp;12&ensp;18&ensp;26&ensp;33&ensp;55&ensp;80&ensp;100<span class="unit">Ah</span></div></div>
+        </div>
+      </div>
+      <div class="card-note">Common catalog sizes across major fire alarm battery manufacturers. The Battery Calc tab automatically selects the smallest size at or above the derated requirement. Confirm exact model/UL listing availability with the manufacturer selected for the project.</div>
+    </div>
+
+  </section>
+
+</main>
+
+<div class="footer-note">
+  Calculation aid only — not a substitute for a licensed design professional's review, manufacturer calculation tools, or AHJ approval. All example values are placeholders.
+</div>
+
+<script>
+(function(){
+
+/* ============================================================
+   DATA
+============================================================ */
+const WIRE_DATA = [
+  { label: "24 AWG Solid",    oneWay: 25.67 },
+  { label: "22 AWG Solid",    oneWay: 16.14 },
+  { label: "18 AWG Solid",    oneWay: 7.77 },
+  { label: "18 AWG Stranded", oneWay: 7.95 },
+  { label: "16 AWG Solid",    oneWay: 4.89 },
+  { label: "16 AWG Stranded", oneWay: 4.99 },
+  { label: "14 AWG Solid",    oneWay: 3.07 },
+  { label: "14 AWG Stranded", oneWay: 3.14 },
+  { label: "12 AWG Solid",    oneWay: 1.93 },
+  { label: "12 AWG Stranded", oneWay: 1.98 },
+  { label: "10 AWG Solid",    oneWay: 1.21 },
+  { label: "10 AWG Stranded", oneWay: 1.24 },
+];
+const BATTERY_SIZES = [7, 12, 18, 26, 33, 55, 80, 100];
+
+const DEFAULT_BATTERY_DEVICES = [
+  { name: "Fire Alarm Control Panel (FACP)", qty: 1,  standby: 0.15,   alarm: 0.27,   linked:false },
+  { name: "Addressable Smoke Detector",       qty: 24, standby: 0.0004, alarm: 0.0004, linked:false },
+  { name: "Addressable Heat Detector",        qty: 8,  standby: 0.0004, alarm: 0.0004, linked:false },
+  { name: "Manual Pull Station",              qty: 6,  standby: 0.0004, alarm: 0.0004, linked:false },
+  { name: "Monitor / Control Module",         qty: 4,  standby: 0.0008, alarm: 0.0008, linked:false },
+  { name: "NAC Horn/Strobe Load (linked to NAC Voltage Drop tab)", qty: 1, standby: 0, alarm: 0, linked:true },
+];
+
+const DEFAULT_NAC_DEVICES = [
+  { label: "Strobe 1 - Corridor",   distance: 60,  current: 0.073, minVoltage: 16 },
+  { label: "Strobe 2 - Corridor",   distance: 40,  current: 0.073, minVoltage: 16 },
+  { label: "Horn/Strobe 3 - Stair", distance: 80,  current: 0.101, minVoltage: 16 },
+  { label: "Horn/Strobe 4 - EOL",   distance: 100, current: 0.101, minVoltage: 16 },
+];
+
+let state = {
+  batteryDevices: JSON.parse(JSON.stringify(DEFAULT_BATTERY_DEVICES)),
+  standbyHours: 24, alarmMinutes: 5, derateFactor: 1.2,
+  chargerRating: 3, requiredRechargeHours: 48,
+
+  nacId: "NAC-1", nacType: "Class B",
+  nominalVoltage: 24, ul864Derate: 0.85, panelDrop: 1.0,
+  wireGauge: "16 AWG Stranded",
+  nacDevices: JSON.parse(JSON.stringify(DEFAULT_NAC_DEVICES)),
+};
+
+/* ============================================================
+   PERSISTENCE (best-effort — safe if localStorage unavailable)
+============================================================ */
+const STORAGE_KEY = "fa_calc_state_v1";
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw){ const parsed = JSON.parse(raw); state = Object.assign(state, parsed); }
+  }catch(e){}
+}
+
+/* ============================================================
+   COMPUTE (verified against the companion Excel workbook)
+============================================================ */
+function computeBattery(){
+  let totalStandby = 0, totalAlarm = 0;
+  const nacTotal = computeNAC().totalCurrent;
+  state.batteryDevices.forEach(d=>{
+    const qty = Number(d.qty)||0;
+    const standby = Number(d.standby)||0;
+    const alarm = d.linked ? nacTotal : (Number(d.alarm)||0);
+    d._alarmResolved = alarm;
+    totalStandby += qty*standby;
+    totalAlarm += qty*alarm;
+  });
+  const alarmHours = (Number(state.alarmMinutes)||0)/60;
+  const standbyAh = totalStandby * (Number(state.standbyHours)||0);
+  const alarmAh = totalAlarm * alarmHours;
+  const requiredAh = standbyAh + alarmAh;
+  const derate = Number(state.derateFactor)||1;
+  const batteryRequired = requiredAh * derate;
+  const selected = BATTERY_SIZES.find(s=>batteryRequired<=s);
+  const selectedLabel = selected !== undefined ? selected : null;
+  const chargerRating = Number(state.chargerRating)||0;
+  const chargerAvail = chargerRating - totalStandby;
+  let rechargeTime = null, chargerStatus = "idle";
+  if(selectedLabel !== null && chargerAvail > 0){
+    rechargeTime = (selectedLabel*0.8)/chargerAvail;
+    chargerStatus = rechargeTime <= (Number(state.requiredRechargeHours)||0) ? "pass" : "fail";
+  } else if (selectedLabel !== null) {
+    chargerStatus = "fail";
+  }
+  return { totalStandby, totalAlarm, alarmHours, standbyAh, alarmAh, requiredAh, batteryRequired, selectedLabel, chargerAvail, rechargeTime, chargerStatus };
+}
+
+function computeNAC(){
+  const nominal = Number(state.nominalVoltage)||0;
+  const derateF = Number(state.ul864Derate)||0;
+  const deratedV = nominal*derateF;
+  const panelDrop = Number(state.panelDrop)||0;
+  const cutoffV = deratedV - panelDrop;
+  const wireEntry = WIRE_DATA.find(w=>w.label===state.wireGauge) || WIRE_DATA[5];
+  const rt = wireEntry.oneWay*2;
+
+  const devices = state.nacDevices;
+  const n = devices.length;
+  let cum = 0;
+  const results = [];
+  for(let i=0;i<n;i++){
+    let segCurrent = 0;
+    for(let j=i;j<n;j++) segCurrent += (Number(devices[j].current)||0);
+    const dist = Number(devices[i].distance)||0;
+    const segRes = (rt/1000)*dist;
+    const segVD = segCurrent*segRes;
+    cum += segVD;
+    const vAtDevice = cutoffV - cum;
+    const minV = Number(devices[i].minVoltage)||0;
+    const margin = vAtDevice - minV;
+    const hasData = dist>0 || (Number(devices[i].current)||0)>0;
+    const status = hasData ? (margin>=0 ? "pass" : "fail") : "idle";
+    results.push({segCurrent, segRes, segVD, cum, vAtDevice, margin, status});
+  }
+  const totalCurrent = n ? results[0].segCurrent : 0;
+  const voltages = results.filter((r,i)=> (Number(devices[i].distance)||0)>0 || (Number(devices[i].current)||0)>0 ).map(r=>r.vAtDevice);
+  const margins = results.filter((r,i)=> (Number(devices[i].distance)||0)>0 || (Number(devices[i].current)||0)>0 ).map(r=>r.margin);
+  const worstV = voltages.length ? Math.min(...voltages) : null;
+  const worstMargin = margins.length ? Math.min(...margins) : null;
+  const overall = worstMargin===null ? "idle" : (worstMargin>=0 ? "pass" : "fail");
+
+  return { deratedV, cutoffV, rt, resistanceOneWay: wireEntry.oneWay, results, totalCurrent, worstV, worstMargin, overall };
+}
+
+/* ============================================================
+   FORMAT HELPERS
+============================================================ */
+const fmt = (v,d=2) => (v===null || v===undefined || isNaN(v)) ? "—" : v.toFixed(d);
+
+/* ============================================================
+   RENDER: BATTERY TABLE
+============================================================ */
+function renderBatteryTable(){
+  const nacTotal = computeNAC().totalCurrent;
+  const tbody = document.getElementById("battery-tbody");
+  tbody.innerHTML = "";
+  state.batteryDevices.forEach((d, i)=>{
+    const standbySub = (Number(d.qty)||0) * (Number(d.standby)||0);
+    const alarmVal = d.linked ? nacTotal : (Number(d.alarm)||0);
+    const alarmSub = (Number(d.qty)||0) * alarmVal;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="computed">${i+1}</td>
+      <td><input class="cell text-cell" data-idx="${i}" data-field="name" value="${escapeHtml(d.name)}"></td>
+      <td class="center"><input class="cell" style="text-align:center;" type="number" step="1" min="0" data-idx="${i}" data-field="qty" value="${d.qty}"></td>
+      <td class="num"><input class="cell" style="text-align:right;" type="number" step="0.0001" min="0" data-idx="${i}" data-field="standby" value="${d.standby}"></td>
+      <td class="num">${
+        d.linked
+        ? `<span class="computed strong">${fmt(nacTotal,4)}</span>`
+        : `<input class="cell" style="text-align:right;" type="number" step="0.0001" min="0" data-idx="${i}" data-field="alarm" value="${d.alarm}">`
+      }</td>
+      <td class="num computed">${fmt(standbySub,4)}</td>
+      <td class="num computed strong">${fmt(alarmSub,4)}</td>
+      <td class="center">${state.batteryDevices.length>1 ? `<button class="row-del" data-idx="${i}" data-action="del-battery">&times;</button>` : ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ============================================================
+   RENDER: NAC TABLE
+============================================================ */
+function renderWireGaugeOptions(selectEl){
+  selectEl.innerHTML = WIRE_DATA.map(w=>`<option value="${w.label}" ${w.label===state.wireGauge?"selected":""}>${w.label}</option>`).join("");
+}
+
+function renderNacTable(){
+  const calc = computeNAC();
+  const tbody = document.getElementById("nac-tbody");
+  tbody.innerHTML = "";
+
+  // baseline / panel row
+  const baseTr = document.createElement("tr");
+  baseTr.className = "base-row";
+  baseTr.innerHTML = `
+    <td>0</td>
+    <td>Panel / NAC Power Supply (start)</td>
+    <td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td><td class="num">—</td>
+    <td class="num computed">0.00</td>
+    <td class="num computed strong">${fmt(calc.cutoffV,2)}</td>
+    <td class="num">—</td><td class="num">—</td><td class="center">—</td><td></td>
+  `;
+  tbody.appendChild(baseTr);
+
+  state.nacDevices.forEach((d,i)=>{
+    const r = calc.results[i];
+    const statusHtml = r.status==="idle"
+      ? `<span class="status-pill idle"><span class="dot"></span>—</span>`
+      : `<span class="status-pill ${r.status}"><span class="dot"></span>${r.status}</span>`;
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td class="computed">${i+1}</td>
+      <td><input class="cell text-cell" data-idx="${i}" data-field="label" value="${escapeHtml(d.label)}"></td>
+      <td class="num"><input class="cell" style="text-align:right;" type="number" step="1" min="0" data-idx="${i}" data-field="distance" value="${d.distance}"></td>
+      <td class="num"><input class="cell" style="text-align:right;" type="number" step="0.001" min="0" data-idx="${i}" data-field="current" value="${d.current}"></td>
+      <td class="num computed">${fmt(r.segCurrent,3)}</td>
+      <td class="num computed">${fmt(r.segRes,4)}</td>
+      <td class="num computed">${fmt(r.segVD,4)}</td>
+      <td class="num computed">${fmt(r.cum,4)}</td>
+      <td class="num computed strong">${fmt(r.vAtDevice,2)}</td>
+      <td class="num"><input class="cell" style="text-align:right;" type="number" step="0.5" min="0" data-idx="${i}" data-field="minVoltage" value="${d.minVoltage}"></td>
+      <td class="num computed">${fmt(r.margin,2)}</td>
+      <td class="center">${statusHtml}</td>
+      <td class="center">${state.nacDevices.length>1 ? `<button class="row-del" data-idx="${i}" data-action="del-nac">&times;</button>` : ""}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* ============================================================
+   RENDER: WIRE DATA TABLE
+============================================================ */
+function renderWireTable(){
+  const tbody = document.querySelector("#wire-table tbody");
+  tbody.innerHTML = WIRE_DATA.map(w=>`
+    <tr><td>${w.label}</td><td class="num computed">${w.oneWay.toFixed(2)}</td><td class="num computed strong">${(w.oneWay*2).toFixed(2)}</td></tr>
+  `).join("");
+}
+
+/* ============================================================
+   RENDER: READOUTS
+============================================================ */
+function renderReadouts(){
+  const b = computeBattery();
+  document.getElementById("bt-total-standby").textContent = fmt(b.totalStandby,4);
+  document.getElementById("bt-total-alarm").textContent = fmt(b.totalAlarm,4);
+  document.getElementById("ro-alarm-hours").textContent = fmt(b.alarmHours,4) + " hr";
+  document.getElementById("ro-total-standby").innerHTML = fmt(b.totalStandby,4) + '<span class="unit">A</span>';
+  document.getElementById("ro-total-alarm").innerHTML = fmt(b.totalAlarm,4) + '<span class="unit">A</span>';
+  document.getElementById("ro-standby-ah").innerHTML = fmt(b.standbyAh,2) + '<span class="unit">Ah</span>';
+  document.getElementById("ro-alarm-ah").innerHTML = fmt(b.alarmAh,2) + '<span class="unit">Ah</span>';
+  document.getElementById("ro-required-ah").innerHTML = fmt(b.requiredAh,2) + '<span class="unit">Ah</span>';
+  document.getElementById("ro-battery-required").textContent = fmt(b.batteryRequired,2) + " Ah";
+  document.getElementById("ro-selected-battery").innerHTML = (b.selectedLabel!==null ? b.selectedLabel : "CONSULT MFR") + '<span class="unit">Ah</span>';
+  document.getElementById("ro-charger-avail").textContent = fmt(b.chargerAvail,4) + " A";
+  document.getElementById("ro-recharge-time").textContent = b.rechargeTime===null ? "—" : fmt(b.rechargeTime,2) + " hr";
+
+  const pill = document.getElementById("charger-status-pill");
+  if(b.chargerStatus==="idle"){ pill.className="status-pill idle"; pill.innerHTML=`<span class="dot"></span>—`; }
+  else { pill.className="status-pill "+b.chargerStatus; pill.innerHTML=`<span class="dot"></span>${b.chargerStatus==="pass"?"Pass":"Fail — increase charger rating or reduce battery size"}`; }
+
+  const n = computeNAC();
+  document.getElementById("ro-derated-v").textContent = fmt(n.deratedV,2) + " V";
+  document.getElementById("ro-cutoff-v").textContent = fmt(n.cutoffV,2) + " V";
+  document.getElementById("ro-wire-res").textContent = fmt(n.rt,2) + " \u03A9/1000ft";
+  document.getElementById("ro-nac-total-i").innerHTML = fmt(n.totalCurrent,3) + '<span class="unit">A</span>';
+  document.getElementById("ro-nac-worst-v").innerHTML = (n.worstV===null?"—":fmt(n.worstV,2)) + '<span class="unit">V</span>';
+  document.getElementById("ro-nac-worst-margin").innerHTML = (n.worstMargin===null?"—":fmt(n.worstMargin,2)) + '<span class="unit">V</span>';
+
+  const led = document.getElementById("nac-overall-led");
+  const ring = led.querySelector(".ring");
+  const txt = led.querySelector(".txt");
+  if(n.overall==="idle"){ ring.className="ring"; ring.style.background="#3a4048"; txt.className="txt"; txt.textContent="—"; }
+  else{
+    ring.className = "ring "+n.overall;
+    txt.className = "txt "+n.overall;
+    txt.textContent = n.overall==="pass" ? "PASS — all devices above minimum voltage" : "FAIL — one or more devices below minimum voltage";
+  }
+}
+
+/* ============================================================
+   MASTER RENDER
+============================================================ */
+function renderAll(){
+  renderBatteryTable();
+  renderNacTable();
+  renderReadouts();
+  saveState();
+}
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+/* ============================================================
+   EVENTS
+============================================================ */
+document.addEventListener("input", (e)=>{
+  const t = e.target;
+
+  if(t.matches("#battery-tbody input")){
+    const idx = Number(t.dataset.idx);
+    const field = t.dataset.field;
+    const val = (field==="name") ? t.value : parseFloat(t.value);
+    state.batteryDevices[idx][field] = (field==="name") ? val : (isNaN(val)?0:val);
+    renderReadouts();
+    // resync computed cells in the same row without full re-render (keeps focus)
+    syncBatteryRow(idx);
+    saveState();
+    return;
+  }
+  if(t.matches("#nac-tbody input")){
+    const idx = Number(t.dataset.idx);
+    const field = t.dataset.field;
+    const val = (field==="label") ? t.value : parseFloat(t.value);
+    state.nacDevices[idx][field] = (field==="label") ? val : (isNaN(val)?0:val);
+    renderNacTable();
+    renderReadouts();
+    renderBatteryTable(); // NAC total may feed battery linked row
+    refocus(idx, field, "nac");
+    saveState();
+    return;
+  }
+  if(t.id==="in-standby-hours"){ state.standbyHours = parseFloat(t.value)||0; renderReadouts(); saveState(); }
+  if(t.id==="in-alarm-min"){ state.alarmMinutes = parseFloat(t.value)||0; renderReadouts(); saveState(); }
+  if(t.id==="in-derate"){ state.derateFactor = parseFloat(t.value)||1; renderReadouts(); saveState(); }
+  if(t.id==="in-charger-rating"){ state.chargerRating = parseFloat(t.value)||0; renderReadouts(); saveState(); }
+  if(t.id==="in-recharge-req"){ state.requiredRechargeHours = parseFloat(t.value)||0; renderReadouts(); saveState(); }
+
+  if(t.id==="nac-id"){ state.nacId = t.value; saveState(); }
+  if(t.id==="nac-nominal"){ state.nominalVoltage = parseFloat(t.value)||0; renderNacTable(); renderReadouts(); renderBatteryTable(); saveState(); }
+  if(t.id==="nac-derate"){ state.ul864Derate = parseFloat(t.value)||0; renderNacTable(); renderReadouts(); renderBatteryTable(); saveState(); }
+  if(t.id==="nac-panel-drop"){ state.panelDrop = parseFloat(t.value)||0; renderNacTable(); renderReadouts(); renderBatteryTable(); saveState(); }
+});
+
+document.addEventListener("change", (e)=>{
+  const t = e.target;
+  if(t.id==="nac-type"){ state.nacType = t.value; saveState(); }
+  if(t.id==="nac-gauge"){ state.wireGauge = t.value; renderNacTable(); renderReadouts(); renderBatteryTable(); saveState(); }
+});
+
+document.addEventListener("click", (e)=>{
+  const t = e.target;
+  if(t.id==="battery-add-row"){
+    state.batteryDevices.push({ name:"New Device", qty:1, standby:0, alarm:0, linked:false });
+    renderAll();
+  }
+  if(t.matches('[data-action="del-battery"]')){
+    const idx = Number(t.dataset.idx);
+    if(state.batteryDevices.length>1){ state.batteryDevices.splice(idx,1); renderAll(); }
+  }
+  if(t.id==="nac-add-row"){
+    state.nacDevices.push({ label:"New Device", distance:0, current:0, minVoltage:16 });
+    renderAll();
+  }
+  if(t.matches('[data-action="del-nac"]')){
+    const idx = Number(t.dataset.idx);
+    if(state.nacDevices.length>1){ state.nacDevices.splice(idx,1); renderAll(); }
+  }
+  const tabBtn = t.closest(".tab-btn");
+  if(tabBtn){
+    document.querySelectorAll(".tab-btn").forEach(b=>b.classList.remove("active"));
+    document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));
+    tabBtn.classList.add("active");
+    document.getElementById("view-"+tabBtn.dataset.view).classList.add("active");
+  }
+});
+
+function syncBatteryRow(idx){
+  const tr = document.querySelectorAll("#battery-tbody tr")[idx];
+  if(!tr) return;
+  const d = state.batteryDevices[idx];
+  const nacTotal = computeNAC().totalCurrent;
+  const standbySub = (Number(d.qty)||0) * (Number(d.standby)||0);
+  const alarmVal = d.linked ? nacTotal : (Number(d.alarm)||0);
+  const alarmSub = (Number(d.qty)||0) * alarmVal;
+  const tds = tr.querySelectorAll("td");
+  tds[5].textContent = fmt(standbySub,4);
+  tds[6].textContent = fmt(alarmSub,4);
+  document.getElementById("bt-total-standby").textContent = fmt(computeBattery().totalStandby,4);
+  document.getElementById("bt-total-alarm").textContent = fmt(computeBattery().totalAlarm,4);
+}
+
+function refocus(idx, field, table){
+  requestAnimationFrame(()=>{
+    const sel = table==="nac" ? `#nac-tbody input[data-idx="${idx}"][data-field="${field}"]` : `#battery-tbody input[data-idx="${idx}"][data-field="${field}"]`;
+    const el = document.querySelector(sel);
+    if(el){ el.focus(); const v=el.value; el.setSelectionRange(v.length, v.length); }
+  });
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+loadState();
+renderWireTable();
+renderWireGaugeOptions(document.getElementById("nac-gauge"));
+document.getElementById("nac-id").value = state.nacId;
+document.getElementById("nac-type").value = state.nacType;
+document.getElementById("nac-nominal").value = state.nominalVoltage;
+document.getElementById("nac-derate").value = state.ul864Derate;
+document.getElementById("nac-panel-drop").value = state.panelDrop;
+document.getElementById("in-standby-hours").value = state.standbyHours;
+document.getElementById("in-alarm-min").value = state.alarmMinutes;
+document.getElementById("in-derate").value = state.derateFactor;
+document.getElementById("in-charger-rating").value = state.chargerRating;
+document.getElementById("in-recharge-req").value = state.requiredRechargeHours;
+renderAll();
+
+})();
+</script>
+</body>
+</html>
