@@ -1,0 +1,2008 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HVAC Design Suite — Zone Loads, Energy &amp; Equipment</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #12151a;
+    --panel: #1a1f27;
+    --ink: #e8eaed;
+    --ink-soft: #9aa4b2;
+    --line: #2d333d;
+    --steel: #5b9bd9;
+    --steel-dark: #2f5f82;
+    --steel-tint: #1a2733;
+    --copper: #c9a24b;
+    --copper-tint: #2a2318;
+    --ok: #3ecf6e;
+    --warn: #e0524a;
+    --mono: "IBM Plex Mono", "SF Mono", Consolas, "Courier New", monospace;
+    --sans: "IBM Plex Sans", -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --display: "Big Shoulders Display", var(--sans);
+    --radius: 8px;
+    --panel-alt: #20262f;
+    --paper: #ece7da;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:var(--sans);
+    font-size:14px;
+    line-height:1.45;
+  }
+  header.app-head{
+    background:var(--steel-dark);
+    color:#fff;
+    padding:18px 28px 14px;
+    border-bottom:4px solid var(--copper);
+  }
+  header.app-head h1{
+    margin:0;
+    font-size:19px;
+    font-weight:600;
+    letter-spacing:0.2px;
+    font-family:var(--display);
+    color:var(--paper);
+  }
+  header.app-head p{
+    margin:4px 0 0;
+    color:var(--ink-soft);
+    font-size:12.5px;
+  }
+  nav.tabs{
+    display:flex;
+    background:var(--steel);
+    padding:0 24px;
+    gap:2px;
+  }
+  nav.tabs button{
+    background:transparent;
+    border:none;
+    color:var(--ink-soft);
+    padding:11px 18px;
+    font-size:13px;
+    font-weight:600;
+    cursor:pointer;
+    border-bottom:3px solid transparent;
+    font-family:var(--sans);
+  }
+  nav.tabs button:hover{ background:rgba(255,255,255,0.08); }
+  nav.tabs button.active{
+    color:#fff;
+    background:var(--bg);
+    color:var(--steel-dark);
+    border-bottom:3px solid var(--copper);
+    border-radius:var(--radius) var(--radius) 0 0;
+  }
+  main{ max-width:1320px; margin:0 auto; padding:20px 24px 60px; }
+  .tab-panel{ display:none; }
+  .tab-panel.active{ display:block; }
+
+  .grid{ display:grid; gap:16px; }
+  .cols-2{ grid-template-columns: 320px 1fr; align-items:start; }
+  .cols-3{ grid-template-columns: 280px 1fr 320px; align-items:start; }
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .card + .card{ margin-top:14px; }
+  .card h2{
+    margin:0 0 12px;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.6px;
+    color:var(--steel);
+    font-weight:700;
+    border-bottom:1px solid var(--line);
+    padding-bottom:8px;
+  }
+  .card h3{ margin:14px 0 8px; font-size:12.5px; color:var(--ink-soft); font-weight:700; }
+
+  label{
+    display:flex; align-items:flex-end; min-height:2.5em; line-height:1.25;
+    font-size:12px; color:var(--ink-soft); margin-bottom:3px; font-weight:600;
+  }
+  input[type=text], input[type=number], select{
+    width:100%;
+    padding:6px 8px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    font-size:13px;
+    font-family:var(--mono);
+    background:var(--panel-alt);
+    color:var(--ink);
+  }
+  input:focus, select:focus{ outline:2px solid var(--steel); outline-offset:0; border-color:var(--steel); }
+  .field{ margin-bottom:10px; }
+  .field-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:8px; }
+
+  /* Design Conditions: fixed column count so every row lines up, regardless of
+     how long an individual label happens to be (auto-fit above can't guarantee this). */
+  #siteCard .field-row{ grid-template-columns:repeat(6,1fr); gap:10px 14px; }
+  @media (max-width:1150px){ #siteCard .field-row{ grid-template-columns:repeat(4,1fr); } }
+  @media (max-width:760px){ #siteCard .field-row{ grid-template-columns:repeat(2,1fr); } }
+
+  button.btn{
+    background:var(--steel);
+    color:#fff;
+    border:none;
+    padding:8px 14px;
+    border-radius:var(--radius);
+    font-size:12.5px;
+    font-weight:700;
+    cursor:pointer;
+    font-family:var(--sans);
+  }
+  button.btn:hover{ background:var(--steel-dark); }
+  button.btn.ghost{ background:transparent; color:var(--steel); border:1px solid var(--steel); }
+  button.btn.danger{ background:transparent; color:var(--warn); border:1px solid var(--warn); padding:4px 8px; font-size:11px; }
+  button.btn.small{ padding:4px 9px; font-size:11.5px; }
+  button.btn.copper{ background:var(--copper); }
+  button.btn.copper:hover{ background:#96602f; }
+
+  table.data{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.data th{
+    text-align:left; background:var(--steel-tint); color:var(--steel-dark);
+    padding:6px 8px; font-weight:700; border-bottom:1px solid var(--line);
+    white-space:nowrap;
+  }
+  table.data td{ padding:6px 8px; border-bottom:1px solid var(--line); font-family:var(--mono); }
+  table.data tr:hover td{ background:var(--panel-alt); }
+  table.data td.num{ text-align:right; }
+
+  .room-list{ list-style:none; margin:0; padding:0; }
+  .room-list li{
+    padding:8px 10px; border:1px solid var(--line); border-radius:var(--radius);
+    margin-bottom:6px; cursor:pointer; background:var(--panel-alt); font-size:12.5px;
+  }
+  .room-list li:hover{ border-color:var(--steel); }
+  .room-list li.active{ border-color:var(--steel); background:var(--steel-tint); font-weight:700; }
+  .room-list li .peak{ float:right; color:var(--copper); font-family:var(--mono); }
+
+  .row-item{
+    display:grid; grid-template-columns: 1fr 90px 90px 90px 32px; gap:6px; align-items:end;
+    margin-bottom:6px; padding:6px; background:var(--panel-alt); border:1px solid var(--line); border-radius:var(--radius);
+  }
+  .row-item label{ margin-bottom:1px; min-height:0; }
+
+  .stat-strip{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:10px 0; }
+  .stat-strip.wide{ grid-template-columns:repeat(6,1fr); }
+  @media (max-width:1150px){ .stat-strip.wide{ grid-template-columns:repeat(3,1fr); } }
+  @media (max-width:620px){ .stat-strip.wide{ grid-template-columns:repeat(2,1fr); } }
+  .stat{
+    background:var(--steel-tint); border-radius:var(--radius); padding:10px 12px;
+    border-left:3px solid var(--steel);
+  }
+  .stat.copper{ background:var(--copper-tint); border-left-color:var(--copper); }
+  .stat .val{ font-family:var(--mono); font-size:19px; font-weight:700; color:var(--steel-dark); white-space:nowrap; }
+  .stat.copper .val{ color:#7d4d20; }
+  .stat .lbl{ font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.4px; }
+
+  .compass{ display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-bottom:8px; }
+  .compass button{
+    padding:6px 2px; font-size:11px; border:1px solid var(--line); background:var(--panel); border-radius:var(--radius); cursor:pointer;
+    font-family:var(--sans); font-weight:700; color:var(--ink-soft);
+  }
+  .compass button.sel{ background:var(--steel); color:#fff; border-color:var(--steel); }
+
+  .note{ font-size:11.5px; color:var(--ink-soft); background:var(--panel-alt); border-left:3px solid var(--line); padding:8px 10px; margin-top:10px; border-radius:var(--radius); }
+  .note.warn{ border-left-color:var(--warn); color:var(--warn); background:#241614; }
+
+  svg.chart{ width:100%; height:220px; display:block; }
+  svg.chart.chart-lg{ height:360px; }
+  @media (max-width:700px){ svg.chart.chart-lg{ height:280px; } }
+  .tag{ display:inline-block; font-size:10.5px; font-weight:700; padding:1px 7px; border-radius:10px; background:var(--steel-tint); color:var(--steel-dark); margin-left:6px; }
+
+  /* extra grid layouts used to give Room Result its own full-width row with
+     an even chart/spreadsheet split, separate from the 320px-sidebar cols-2 */
+  .cols-2a{ grid-template-columns:280px 1fr; align-items:start; }
+  .cols-even{ grid-template-columns:1fr 1fr; }
+  @media (max-width:900px){ .cols-2a, .cols-even{ grid-template-columns:1fr; } }
+
+  .sheet-toolbar{ display:flex; align-items:center; gap:8px; margin-bottom:8px; flex-wrap:wrap; }
+  .sheet-toolbar .tag{ margin-left:0; }
+  .xl-sheet-wrap{ max-height:460px; overflow:auto; border:1px solid var(--line); border-radius:var(--radius); }
+  table.xl-sheet{ width:100%; border-collapse:collapse; font-family:var(--mono); font-size:11.5px; }
+  table.xl-sheet th{
+    position:sticky; top:0; background:var(--panel-alt); color:var(--ink-soft); font-weight:700;
+    border:1px solid var(--line); padding:4px 6px; text-align:center; z-index:1;
+  }
+  table.xl-sheet th.corner{ background:var(--panel-alt); }
+  table.xl-sheet td{ border:1px solid var(--line); padding:4px 8px; background:var(--panel); }
+  table.xl-sheet td.rownum{
+    background:var(--panel-alt); color:var(--ink-soft); text-align:center; font-weight:700;
+    width:28px; position:sticky; left:0;
+  }
+  table.xl-sheet td.xl-h{ font-weight:700; color:var(--steel-dark); background:var(--panel-alt); }
+  table.xl-sheet td.xl-section{
+    font-weight:700; color:#fff; background:var(--steel); letter-spacing:0.3px;
+    text-transform:uppercase; font-size:10.5px; font-family:var(--sans);
+  }
+  table.xl-sheet td.num{ text-align:right; }
+
+  .method-toggle{ display:flex; gap:6px; margin-bottom:10px; }
+  .method-toggle button{ flex:1; padding:6px; font-size:12px; border:1px solid var(--line); background:var(--panel); border-radius:var(--radius); cursor:pointer; font-weight:600; color:var(--ink-soft); }
+  .method-toggle button.sel{ background:var(--steel); color:#fff; border-color:var(--steel); }
+
+  .month-grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+  .month-grid .m{ text-align:center; }
+  .month-grid .m label{ font-size:10.5px; margin-bottom:2px; min-height:0; justify-content:center; }
+  .month-grid .m input{ text-align:center; padding:5px 2px; font-size:12px; }
+
+  footer.app-foot{ max-width:1320px; margin:0 auto; padding:0 24px 40px; color:var(--ink-soft); font-size:11px; }
+
+  /* ---- Interactive walkthrough (floating guide panel) ---- */
+  .wt-launch{ display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .wt-panel{
+    position:fixed; right:20px; bottom:20px; width:380px; max-width:92vw;
+    background:var(--panel); border-radius:var(--radius); box-shadow:0 10px 32px rgba(15,25,35,0.32);
+    border:1px solid var(--line); z-index:9999; display:none; overflow:hidden;
+    font-family:var(--sans); max-height:82vh;
+  }
+  .wt-panel.open{ display:flex; flex-direction:column; }
+  .wt-head{
+    background:linear-gradient(135deg,#1c3550,#2b4c6f); color:#fff; padding:10px 14px;
+    display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
+  }
+  .wt-head strong{ font-size:13px; letter-spacing:0.2px; }
+  .wt-close{ background:none; border:none; color:#cfe0ee; font-size:18px; cursor:pointer; line-height:1; padding:2px 4px; }
+  .wt-close:hover{ color:#fff; }
+  .wt-progress{ height:4px; background:var(--line); flex-shrink:0; }
+  .wt-progress-bar{ height:100%; background:var(--copper); transition:width .25s; }
+  .wt-body{ padding:14px 16px 6px; overflow-y:auto; }
+  .wt-group{ font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--copper); margin-bottom:3px; }
+  .wt-label{ font-size:15.5px; font-weight:700; color:var(--steel-dark); margin-bottom:10px; line-height:1.3; }
+  .wt-example{
+    background:var(--steel-tint); border-left:3px solid var(--steel); border-radius:6px;
+    padding:8px 10px; font-family:var(--mono); font-size:12.5px; margin-bottom:10px; word-break:break-word;
+  }
+  .wt-example b{ display:block; font-family:var(--sans); font-size:9.5px; text-transform:uppercase; color:var(--ink-soft); margin-bottom:3px; font-weight:700; letter-spacing:0.4px; }
+  .wt-fill-btn{ width:100%; margin-bottom:10px; }
+  .wt-why{ font-size:12.5px; color:var(--ink); line-height:1.55; margin-bottom:6px; }
+  .wt-why b{ color:var(--steel-dark); }
+  .wt-foot{ display:flex; align-items:center; gap:8px; padding:10px 16px 14px; flex-shrink:0; }
+  .wt-foot button{ flex:1; }
+  .wt-counter{ font-size:11px; color:var(--ink-soft); text-align:center; padding-bottom:8px; flex-shrink:0; }
+  .wt-jumplinks{ display:flex; flex-wrap:wrap; gap:5px; padding:10px 16px; flex-shrink:0; border-top:1px solid var(--line); max-height:88px; overflow-y:auto; }
+  .wt-jumplinks button{
+    font-size:10px; padding:3px 8px; border-radius:10px; border:1px solid var(--line);
+    background:var(--panel-alt); color:var(--ink-soft); cursor:pointer; font-weight:600;
+  }
+  .wt-jumplinks button.current{ background:var(--steel); color:#fff; border-color:var(--steel); }
+
+  .wt-highlight{
+    outline:3px solid var(--copper) !important;
+    outline-offset:2px !important;
+    box-shadow:0 0 0 6px rgba(185,119,63,0.25) !important;
+    border-radius:6px !important;
+    animation: wtPulse 1.3s ease-in-out 2;
+  }
+  @keyframes wtPulse{
+    0%,100%{ box-shadow:0 0 0 6px rgba(185,119,63,0.25); }
+    50%{ box-shadow:0 0 0 10px rgba(185,119,63,0.12); }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-head">
+  <h1>HVAC Design Suite</h1>
+  <p>Zone load calculation · building energy &amp; cost estimation · equipment sizing — SI units, ASHRAE-based methods</p>
+</header>
+
+<nav class="tabs">
+  <button class="tab-btn active" data-tab="guide">Guide</button>
+  <button class="tab-btn" data-tab="loads">1 · Zone Loads</button>
+  <button class="tab-btn" data-tab="energy">2 · Energy &amp; Cost</button>
+  <button class="tab-btn" data-tab="equip">3 · Equipment Selection</button>
+</nav>
+
+<main>
+
+  <!-- ============ TAB 0: GUIDE / METHODOLOGY ============ -->
+  <section id="tab-guide" class="tab-panel active">
+
+    <div class="card" style="background:linear-gradient(135deg,#1c3550,#2b4c6f); border:none;">
+      <div class="wt-launch">
+        <div style="flex:1;min-width:220px;">
+          <h2 style="color:#fff; border-color:rgba(255,255,255,0.25);">New here? Walk through it step by step</h2>
+          <p style="color:#cfe0ee; margin:0;">A floating panel will guide you field-by-field across all 3 tabs — what to type, an example value, and why it matters — highlighting each box as you go.</p>
+        </div>
+        <button class="btn copper" id="wtStartBtn" style="flex-shrink:0;">▶ Start Interactive Walkthrough</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>What This Tool Does</h2>
+      <p>Three linked modules that mirror the core pieces of a building HVAC load/energy workflow — modeled on what software like Carrier's HAP does, using standard published ASHRAE methods rather than a proprietary hourly simulation engine. Each module's output feeds the next one, so you generally work through them left to right.</p>
+      <table class="data">
+        <tr><th>If you need to…</th><th>Use</th><th>What you feed it</th><th>What it gives you</th></tr>
+        <tr><td>Size supply air / a fan-coil / split unit for one room, or build a room-by-room load schedule</td><td><b>Tab 1 — Zone Loads</b></td><td>Room geometry, wall/roof/glass construction, orientation, occupancy, lighting, equipment — one room at a time</td><td>Peak sensible/latent/total load, required supply airflow, per-room heating load</td></tr>
+        <tr><td>Estimate a utility bill, compare an efficiency upgrade, budget annual operating cost</td><td><b>Tab 2 — Energy &amp; Cost</b></td><td>The peak load from Tab 1 + monthly climate data (or degree-days) + tariff + equipment COP</td><td>Estimated annual/monthly kWh and cost</td></tr>
+        <tr><td>Decide chiller/VRF/AHU capacity, unit count, and redundancy</td><td><b>Tab 3 — Equipment Selection</b></td><td>The building block load from Tab 1 + diversity factor + redundancy policy</td><td>Recommended unit size/count against standard capacity steps</td></tr>
+      </table>
+      <div class="note">Use the ↺ "Pull latest" buttons in Tabs 2 and 3 to carry a load figure forward instead of retyping it — but you can always overwrite it manually if you're estimating without having built out Tab 1 first.</div>
+    </div>
+
+    <div class="card">
+      <h2>Worked Example 1 — Zone Load (matches the room pre-loaded in Tab 1)</h2>
+      <p>Room "Guest Room 501 (corner)": west wall 18 m² (U=1.8, absorptance 0.6), south wall 12 m² (same construction), west window 5 m² (U=2.8, SHGC=0.55, IAC=0.85), 2 occupants, 120 W lighting, 250 W equipment, 15 L/s infiltration. Site: Dhaka, design day 15 Apr, outdoor design 37°C (8°C daily range), indoor 24°C/50%RH, 10% safety factor. The engine scans all 24 hours; here is the governing hour, <b>15:00</b>:</p>
+      <table class="data">
+        <tr><th>Step</th><th class="num">Value</th></tr>
+        <tr><td>Solar altitude / azimuth at 15:00 (from solar position equations)</td><td class="num">37.7° / 276.6°</td></tr>
+        <tr><td>Clear-sky beam normal irradiance</td><td class="num">856 W/m²</td></tr>
+        <tr><td>Irradiance on west-facing surface (incidence-angle corrected)</td><td class="num">742 W/m²</td></tr>
+        <tr><td>Outdoor dry-bulb at 15:00 (from daily range profile)</td><td class="num">36.8 °C</td></tr>
+        <tr><td>Sol-air temp, west wall = 36.8 + (0.6×742)/17</td><td class="num">62.9 °C</td></tr>
+        <tr><td>West wall Q = 1.8 × 18 × (62.9−24)</td><td class="num">1,262 W</td></tr>
+        <tr><td>South wall Q (irradiance only 68 W/m² at this hour) = 1.8 × 12 × (39.2−24)</td><td class="num">328 W</td></tr>
+        <tr><td>Window conduction = 2.8 × 5 × (36.8−24)</td><td class="num">179 W</td></tr>
+        <tr><td>Window solar gain = 5 × 0.55 × 0.85 × 742</td><td class="num">1,734 W</td></tr>
+        <tr><td>People sensible/latent = 2 × 70 / 2 × 45</td><td class="num">140 / 90 W</td></tr>
+        <tr><td>Lighting + equipment</td><td class="num">120 + 250 W</td></tr>
+        <tr><td>Infiltration sensible = 1.23 × 15 × (36.8−24)</td><td class="num">235 W</td></tr>
+        <tr><td>Infiltration latent = 3010 × 15 × Δ humidity ratio (0.0168)</td><td class="num">759 W</td></tr>
+        <tr style="font-weight:700;"><td>Sensible 4,247 W + Latent 849 W, × 1.10 safety factor</td><td class="num">5,606 W = 5.61 kW = 1.59 TR</td></tr>
+      </table>
+      <div class="note">Open Tab 1 with the default room loaded — it shows exactly 5.61 kW at 15:00. If you change any input, the number will move; the arithmetic above is what moves it.</div>
+    </div>
+
+    <div class="card">
+      <h2>Worked Example 2 — Energy &amp; Cost</h2>
+      <p>Using a peak block load of 6.90 kW (two rooms) at design conditions (outdoor 37°C, indoor 24°C):</p>
+      <table class="data">
+        <tr><th>Step</th><th class="num">Value</th></tr>
+        <tr><td>Effective building UA = peak load ÷ design ΔT = 6.90 ÷ (37−24)</td><td class="num">0.531 kW/°C</td></tr>
+        <tr><td>April: avg outdoor 29°C, base temp 24°C, 30 days → CDD = (29−24)×30</td><td class="num">150 °C·day</td></tr>
+        <tr><td>April cooling energy = UA × CDD × 24 ÷ COP = 0.531 × 150 × 24 ÷ 3.2</td><td class="num">597 kWh</td></tr>
+        <tr><td>Repeat for all 12 months and sum → annual kWh, then × tariff</td><td class="num">→ annual cost</td></tr>
+      </table>
+      <div class="note">This is the standard variable-base degree-day method: it assumes the building's heat gain/loss scales roughly linearly with outdoor temperature, calibrated using the one peak-load data point from Tab 1. It's a reasonable planning-level estimate — not a substitute for full 8760-hour simulation with real hourly weather (TMY) data when the stakes are financing or code-compliance numbers.</div>
+    </div>
+
+    <div class="card">
+      <h2>Worked Example 3 — Equipment Selection</h2>
+      <p>Using the same 6.90 kW block load, diversity 0.9, 10% safety, N+1 redundancy:</p>
+      <table class="data">
+        <tr><th>Step</th><th class="num">Value</th></tr>
+        <tr><td>Raw block load = 6.90 kW</td><td class="num">1.96 TR</td></tr>
+        <tr><td>Design load = 1.96 × 0.9 diversity × 1.10 safety</td><td class="num">1.94 TR</td></tr>
+        <tr><td>N+1 needs each unit to independently cover the full design load — next standard step ≥ 1.94 TR</td><td class="num">2 TR per unit</td></tr>
+        <tr style="font-weight:700;"><td>Configuration: 2 × 2 TR units (1 duty + 1 standby)</td><td class="num">4 TR installed, 106% margin</td></tr>
+      </table>
+      <div class="note">N+1 doubles installed capacity because each unit must be able to carry the full load alone. Compare that to "2×50%" in Tab 3, which sizes each unit for half the load and installs less total spare capacity but has no full backup if one unit fails.</div>
+    </div>
+
+  </section>
+
+  <!-- ============ TAB 1: ZONE LOADS ============ -->
+  <section id="tab-loads" class="tab-panel">
+
+    <div class="card" id="siteCard">
+      <h2>Design Conditions <span class="tag">shared across all rooms</span></h2>
+      <div class="note" style="margin-bottom:12px;">Picking a <b>Location</b> sets latitude, longitude and standard meridian (fixed geography — these never change afterward) and jumps to that division's typical peak month. <b>Outdoor design DB, daily range and outdoor RH then update automatically for whichever Design month is selected</b> — change the month on its own to check a different season without leaving climate values from another month behind. Winter design DB always reflects the site's coldest month. All of this stays editable if you have more precise site data. Indoor setpoint, indoor RH and supply air ΔT are your design choices and are never overwritten.</div>
+      <div class="field-row">
+        <div class="field"><label>Location</label>
+          <select id="siteName">
+            <option value="Dhaka, BD" selected>Dhaka, BD</option>
+            <option value="Chattogram, BD">Chattogram, BD</option>
+            <option value="Rajshahi, BD">Rajshahi, BD</option>
+            <option value="Khulna, BD">Khulna, BD</option>
+            <option value="Sylhet, BD">Sylhet, BD</option>
+            <option value="Barishal, BD">Barishal, BD</option>
+            <option value="Rangpur, BD">Rangpur, BD</option>
+            <option value="Mymensingh, BD">Mymensingh, BD</option>
+            <option value="__custom__">Other / custom…</option>
+          </select>
+          <input type="text" id="siteNameCustom" placeholder="Type your location name" style="display:none;margin-top:6px;">
+        </div>
+        <div class="field"><label>Latitude (°N)</label><input type="number" id="siteLat" value="23.81" step="0.01"></div>
+        <div class="field"><label>Longitude (°E)</label><input type="number" id="siteLon" value="90.41" step="0.01"></div>
+        <div class="field"><label>Std meridian (°E)</label><input type="number" id="siteMeridian" value="90" step="1"></div>
+        <div class="field"><label>Design month</label>
+          <select id="siteMonth">
+            <option>1</option><option>2</option><option>3</option><option selected value="4">4</option>
+            <option>5</option><option>6</option><option>7</option><option>8</option><option>9</option>
+            <option>10</option><option>11</option><option>12</option>
+          </select>
+        </div>
+        <div class="field"><label>Design day</label><input type="number" id="siteDay" value="15" min="1" max="31"></div>
+      </div>
+      <div class="field-row" style="margin-top:10px;">
+        <div class="field"><label>Outdoor design DB (°C)</label><input type="number" id="siteDB" value="37" step="0.5"></div>
+        <div class="field"><label>Daily range (°C)</label><input type="number" id="siteRange" value="8" step="0.5"></div>
+        <div class="field"><label>Sky clearness (0.85–1.15)</label><input type="number" id="siteClear" value="1.0" step="0.05"></div>
+        <div class="field"><label>Outdoor design RH (%)</label><input type="number" id="siteRH" value="65" step="1"></div>
+        <div class="field"><label>Indoor setpoint (°C)</label><input type="number" id="siteTin" value="24" step="0.5"></div>
+        <div class="field"><label>Indoor RH (%)</label><input type="number" id="siteTinRH" value="50" step="1"></div>
+      </div>
+      <div class="field-row" style="margin-top:10px;">
+        <div class="field"><label>Supply air ΔT (°C)</label><input type="number" id="siteSupplyDT" value="11" step="0.5"></div>
+        <div class="field"><label>Winter outdoor design DB (°C)</label><input type="number" id="siteWinterDB" value="10" step="0.5"></div>
+      </div>
+      <div class="note">Peak load is found by scanning all 24 hours of the design day for each room (sol-air temperature + ASHRAE clear-sky solar model) and taking the governing hour — orientations peak at different times, so this is not a single fixed hour. This is a simplified peak-design method (sol-air / clear-sky, no thermal-mass time-lag), intended for preliminary and mid-design sizing rather than full 8760-hour radiant-time-series simulation.</div>
+    </div>
+
+    <div class="grid cols-2a" style="margin-top:14px;">
+      <div>
+        <div class="card">
+          <h2>Rooms</h2>
+          <ul class="room-list" id="roomList"></ul>
+          <button class="btn" id="addRoomBtn" style="width:100%;margin-top:6px;">+ Add Room</button>
+        </div>
+        <div class="card" id="buildingSummaryCard">
+          <h2>Building Summary</h2>
+          <table class="data" id="buildingSummaryTable"></table>
+          <div class="note">"Sum of peaks" = each room sized at its own worst hour (use for zone/terminal equipment). "Block load" = whole building evaluated at one common hour (use for central plant sizing) — carried into Tab 3. Full per-room breakdown, chart and exports are in <b>All Rooms — Building Total</b> below.</div>
+        </div>
+        <div class="card">
+          <h2>Material Reference</h2>
+          <table class="data" id="refWallTable"></table>
+          <h3>Roof / Slab U-value (W/m²K)</h3>
+          <table class="data" id="refRoofTable"></table>
+          <h3>Glazing U-value (W/m²K)</h3>
+          <table class="data" id="refGlassTable"></table>
+          <h3>SHGC by glass type</h3>
+          <table class="data" id="refShgcTable"></table>
+          <h3>Surface absorptance (color)</h3>
+          <table class="data" id="refAbsTable"></table>
+          <div class="note">Typical planning values — verify against actual material specs/datasheets for final design.</div>
+        </div>
+      </div>
+
+      <div id="roomEditorWrap"></div>
+    </div>
+
+    <div class="card" style="margin-top:14px;" id="roomResultCard">
+      <h2>Room Result</h2>
+      <div id="roomResultStats"></div>
+
+      <div class="grid cols-even" style="margin-top:14px;">
+        <div>
+          <h3 style="margin-top:0;">Load Profile &amp; Breakdown</h3>
+          <svg class="chart chart-lg" id="roomChart"></svg>
+          <table class="data" id="roomBreakdownTable" style="margin-top:10px;"></table>
+        </div>
+        <div>
+          <h3 style="margin-top:0;">Live Data Sheet</h3>
+          <div class="sheet-toolbar">
+            <span class="tag">updates on calculate</span>
+            <button class="btn small ghost" id="exportRoomXlsx">⬇ Export .xlsx</button>
+            <button class="btn small copper" id="exportRoomPdf">⬇ PDF report</button>
+          </div>
+          <div class="xl-sheet-wrap">
+            <table class="xl-sheet" id="liveExcelSheet"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:14px;" id="buildingResultCard">
+      <h2>All Rooms — Building Total</h2>
+      <div id="buildingResultStats"></div>
+
+      <div class="grid cols-even" style="margin-top:14px;">
+        <div>
+          <h3 style="margin-top:0;">Aggregate Load Profile (all rooms)</h3>
+          <svg class="chart chart-lg" id="buildingChart"></svg>
+          <table class="data" id="buildingRoomsTable" style="margin-top:10px;"></table>
+        </div>
+        <div>
+          <h3 style="margin-top:0;">Live Data Sheet — All Rooms</h3>
+          <div class="sheet-toolbar">
+            <span class="tag">updates on calculate</span>
+            <button class="btn small ghost" id="exportBuildingXlsx">⬇ Export .xlsx</button>
+            <button class="btn small copper" id="exportBuildingPdf">⬇ PDF report</button>
+          </div>
+          <div class="xl-sheet-wrap">
+            <table class="xl-sheet" id="buildingExcelSheet"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 2: ENERGY & COST ============ -->
+  <section id="tab-energy" class="tab-panel">
+    <div class="grid cols-2">
+      <div>
+        <div class="card">
+          <h2>Load Basis</h2>
+          <div class="field"><label>Peak sensible cooling load (kW) <span class="tag">from Tab 1</span></label>
+            <input type="number" id="enPeakCool" step="0.1">
+          </div>
+          <div class="field"><label>Peak sensible heating load (kW)</label>
+            <input type="number" id="enPeakHeat" step="0.1" value="0">
+          </div>
+          <button class="btn ghost small" id="pullFromLoads">↺ Pull latest from Tab 1</button>
+        </div>
+
+        <div class="card">
+          <h2>Climate Input</h2>
+          <div class="method-toggle">
+            <button data-method="monthly" class="sel">Monthly avg temps</button>
+            <button data-method="dd">Direct CDD / HDD</button>
+          </div>
+          <div id="monthlyBlock">
+            <div class="field"><label>Base temperature for degree-days (°C)</label><input type="number" id="baseTempC" value="24" step="0.5"></div>
+            <h3>Monthly average outdoor dry-bulb (°C)</h3>
+            <div class="month-grid" id="monthGrid"></div>
+          </div>
+          <div id="ddBlock" style="display:none;">
+            <div class="field"><label>Annual cooling degree-days (°C·day)</label><input type="number" id="cddDirect" value="2200"></div>
+            <div class="field"><label>Annual heating degree-days (°C·day)</label><input type="number" id="hddDirect" value="0"></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h2>Equipment &amp; Rate</h2>
+          <div class="field-row">
+            <div class="field"><label>Avg seasonal cooling COP</label><input type="number" id="copCool" value="3.2" step="0.1"></div>
+            <div class="field"><label>Avg seasonal heating COP/η</label><input type="number" id="copHeat" value="0.95" step="0.05"></div>
+            <div class="field"><label>Non-HVAC baseline? (skip)</label><input type="text" value="—" disabled></div>
+          </div>
+          <div class="field-row">
+            <div class="field"><label>Currency symbol</label><input type="text" id="currSym" value="৳"></div>
+            <div class="field"><label>Rate (per kWh)</label><input type="number" id="rateFlat" value="10" step="0.5"></div>
+            <div class="field"><label>Fixed monthly charge</label><input type="number" id="rateFixed" value="0" step="10"></div>
+          </div>
+        </div>
+        <button class="btn copper" id="calcEnergyBtn" style="width:100%;">Calculate Energy &amp; Cost</button>
+      </div>
+
+      <div>
+        <div class="card">
+          <h2>Results</h2>
+          <div class="stat-strip" id="energyStats"></div>
+          <svg class="chart chart-lg" id="energyChart"></svg>
+          <table class="data" id="energyTable"></table>
+          <div class="note">Method: variable-base degree-day. An effective building UA (kW/°C) is back-calculated from the Tab-1 peak load and design ΔT, then applied to monthly degree-days to estimate energy. This is a recognized simplified method for preliminary energy/cost estimates — not a substitute for full hourly (8760 h) simulation with real TMY weather data when precision matters (financing, LEED/ASHRAE 90.1 compliance, etc).</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TAB 3: EQUIPMENT SELECTION ============ -->
+  <section id="tab-equip" class="tab-panel">
+    <div class="grid cols-2">
+      <div>
+        <div class="card">
+          <h2>Load Basis</h2>
+          <div class="field"><label>Design cooling load (kW) <span class="tag">from Tab 1 block load</span></label>
+            <input type="number" id="eqLoadKW" step="0.1">
+          </div>
+          <button class="btn ghost small" id="eqPullBtn">↺ Pull latest block load from Tab 1</button>
+          <div class="field-row" style="margin-top:10px;">
+            <div class="field"><label>Diversity factor</label><input type="number" id="eqDiversity" value="0.9" step="0.05"></div>
+            <div class="field"><label>Contingency / safety (%)</label><input type="number" id="eqSafety" value="10" step="1"></div>
+          </div>
+          <div class="field"><label>Redundancy strategy</label>
+            <select id="eqRedundancy">
+              <option value="1">N — no redundancy</option>
+              <option value="n1">N+1</option>
+              <option value="2x50">2 × 50%</option>
+              <option value="3x50">3 × 50%</option>
+              <option value="4x33">4 × 33%</option>
+            </select>
+          </div>
+          <button class="btn copper" id="calcEqBtn" style="width:100%;margin-top:8px;">Size Equipment</button>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <h2>Sizing Result</h2>
+          <div class="stat-strip" id="eqStats"></div>
+          <table class="data" id="eqTable"></table>
+        </div>
+        <div class="card">
+          <h2>Equipment Type Guidance <span class="tag">general reference</span></h2>
+          <table class="data" id="eqGuideTable"></table>
+          <div class="note">Qualitative reference only — always confirm against current manufacturer catalogs, part-load performance curves, and site-specific constraints (space, noise, refrigerant rules, redundancy policy) before finalizing a selection.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="app-foot">
+  Simplified, standards-based engineering tool for preliminary design — not a substitute for full detailed calculation software or professional engineering judgment on final design documents.
+</footer>
+
+<!-- Floating interactive walkthrough panel — lives outside the tab panels so it stays
+     visible no matter which tab the walkthrough switches you to. -->
+<div class="wt-panel" id="wtPanel">
+  <div class="wt-head">
+    <strong id="wtGroupTitle">Walkthrough</strong>
+    <button class="wt-close" id="wtCloseBtn" title="Close walkthrough">✕</button>
+  </div>
+  <div class="wt-progress"><div class="wt-progress-bar" id="wtProgressBar" style="width:0%;"></div></div>
+  <div class="wt-body">
+    <div class="wt-group" id="wtGroup">Group</div>
+    <div class="wt-label" id="wtLabel">Field label</div>
+    <div class="wt-example" id="wtExampleWrap">
+      <b>Example / suggested value</b>
+      <span id="wtExample">—</span>
+    </div>
+    <button class="btn ghost small wt-fill-btn" id="wtFillBtn" style="display:none;">✎ Use this example value</button>
+    <div class="wt-why"><b>Why this matters:</b> <span id="wtWhy">—</span></div>
+  </div>
+  <div class="wt-counter" id="wtCounter">Step 1 of 1</div>
+  <div class="wt-foot">
+    <button class="btn ghost small" id="wtPrevBtn">◀ Prev</button>
+    <button class="btn copper small" id="wtNextBtn">Next ▶</button>
+  </div>
+  <div class="wt-jumplinks" id="wtJumplinks"></div>
+</div>
+
+<script src="https://cdn.sheetjs.com/xlsx-0.18.5/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+/* =========================================================
+   CALCULATION ENGINE
+   ========================================================= */
+function deg2rad(d){ return d*Math.PI/180; }
+function rad2deg(r){ return r*180/Math.PI; }
+function dayOfYear(month, day){
+  const cum=[0,31,59,90,120,151,181,212,243,273,304,334];
+  return cum[month-1]+day;
+}
+function solarDeclination(n){ return 23.45*Math.sin(deg2rad(360*(284+n)/365)); }
+function equationOfTime(n){
+  const B=deg2rad(360*(n-81)/364);
+  return 9.87*Math.sin(2*B)-7.53*Math.cos(B)-1.5*Math.sin(B);
+}
+function solarPosition(lat,lon,stdMeridian,n,localStdTime){
+  const decl=solarDeclination(n), eot=equationOfTime(n);
+  const AST=localStdTime+eot/60-4*(stdMeridian-lon)/60;
+  const H=15*(AST-12);
+  const latR=deg2rad(lat), declR=deg2rad(decl), HR=deg2rad(H);
+  const sinAlt=Math.cos(latR)*Math.cos(declR)*Math.cos(HR)+Math.sin(latR)*Math.sin(declR);
+  const alt=rad2deg(Math.asin(Math.max(-1,Math.min(1,sinAlt))));
+  let cosAz=(Math.sin(deg2rad(alt))*Math.sin(latR)-Math.sin(declR))/(Math.cos(deg2rad(alt))*Math.cos(latR));
+  cosAz=Math.max(-1,Math.min(1,cosAz));
+  let az=rad2deg(Math.acos(cosAz));
+  if(H>0) az=360-az;
+  return {declination:decl, altitude:alt, azimuth:az};
+}
+function clearSkyIrradiance(altitudeDeg,n,clearness){
+  if(altitudeDeg<=0) return {beamNormal:0,diffuseHoriz:0,C:0.1};
+  const A=1160+75*Math.sin(deg2rad(360*(n-275)/365));
+  const B=0.174+0.035*Math.sin(deg2rad(360*(n-100)/365));
+  const C=0.095+0.04*Math.sin(deg2rad(360*(n-100)/365));
+  const altR=deg2rad(altitudeDeg);
+  const beamNormal=(A/Math.exp(B/Math.sin(altR)))*clearness;
+  const diffuseHoriz=C*beamNormal;
+  return {beamNormal,diffuseHoriz,C};
+}
+function surfaceIrradiance(beamNormal,diffuseHoriz,C,altitude,azimuth,surfTilt,surfAz,groundRefl){
+  groundRefl = groundRefl===undefined?0.2:groundRefl;
+  const altR=deg2rad(altitude), tiltR=deg2rad(surfTilt);
+  const surfSolarAz=azimuth-surfAz;
+  const cosTheta=Math.cos(altR)*Math.cos(deg2rad(surfSolarAz))*Math.sin(tiltR)+Math.sin(altR)*Math.cos(tiltR);
+  const Ib=Math.max(0,beamNormal*cosTheta);
+  const Id=diffuseHoriz*(surfTilt===0?1:(C+Math.cos(tiltR))/(1+C));
+  const Ig=(beamNormal*Math.sin(Math.max(0,altR))+diffuseHoriz)*groundRefl*(1-Math.cos(tiltR))/2;
+  return Math.max(0,Ib+Id+Ig);
+}
+function solAirTemp(To,I,alpha,ho,radCorrection){
+  return To+(alpha*I/ho)-(radCorrection||0);
+}
+const DAILY_RANGE_PCT=[0.88,0.92,0.95,0.98,1.00,0.98,0.91,0.74,0.55,0.38,0.23,0.13,0.05,0.00,0.00,0.03,0.10,0.21,0.34,0.47,0.58,0.68,0.76,0.82];
+
+function satPressureKPa(T){ // Arden Buck, kPa, T in C
+  return 0.61121*Math.exp((18.678-T/234.5)*(T/(257.14+T)));
+}
+function humidityRatio(T,RH){
+  const Pws=satPressureKPa(T), Pw=RH/100*Pws;
+  return 0.622*Pw/(101.325-Pw);
+}
+
+const ORIENTATIONS=[
+  {key:'N',label:'N',az:0},{key:'NE',label:'NE',az:45},{key:'E',label:'E',az:90},{key:'SE',label:'SE',az:135},
+  {key:'S',label:'S',az:180},{key:'SW',label:'SW',az:225},{key:'W',label:'W',az:270},{key:'NW',label:'NW',az:315}
+];
+
+// Typical planning-level design climate data for each Bangladesh division's
+// major city, derived from published 1991-2020 climate normals (monthly mean
+// daily max/min dry-bulb). Design DB = monthly mean max + 3°C, Winter design
+// DB = coldest month's mean min - 3°C (a simple, consistent extreme-value
+// margin applied the same way on both the hot and cold side) — treat these
+// the same as the Material Reference table: a reasonable starting point, not
+// a substitute for local ASHRAE/BNBC station data on final design documents.
+// maxT/minT arrays are indexed Jan=0 ... Dec=11.
+const BD_LOCATIONS = {
+  'Dhaka, BD': {
+    lat:23.81, lon:90.41, meridian:90, peakMonth:4, clearness:1.0, rhOffset:0,
+    maxT:[25,28,32,34,34,33,32,32,32,32,30,26], minT:[13,17,21,24,25,26,26,26,26,24,20,15]
+  },
+  'Chattogram, BD': {
+    lat:22.36, lon:91.78, meridian:90, peakMonth:5, clearness:1.0, rhOffset:10,
+    maxT:[26,29,31,32,32,32,31,31,32,32,30,27], minT:[14,17,21,24,25,26,26,26,26,24,20,16]
+  },
+  'Rajshahi, BD': {
+    lat:24.37, lon:88.60, meridian:90, peakMonth:4, clearness:1.05, rhOffset:-10,
+    maxT:[24,28,33,36,35,34,32,33,32,32,29,26], minT:[11,13,18,23,24,26,26,26,26,23,18,13]
+  },
+  'Khulna, BD': {
+    lat:22.82, lon:89.55, meridian:90, peakMonth:5, clearness:1.0, rhOffset:7,
+    maxT:[25,29,33,35,35,34,32,32,33,32,30,26], minT:[12,16,21,24,26,26,26,26,26,24,20,14]
+  },
+  'Sylhet, BD': {
+    lat:24.90, lon:91.87, meridian:90, peakMonth:4, clearness:0.9, rhOffset:13,
+    maxT:[26,28,31,32,31,32,32,32,32,32,30,27], minT:[10,12,17,21,23,25,25,25,25,22,17,12]
+  },
+  'Barishal, BD': {
+    lat:22.70, lon:90.37, meridian:90, peakMonth:5, clearness:1.0, rhOffset:8,
+    maxT:[25,29,32,34,34,32,31,32,32,32,30,27], minT:[12,15,20,24,25,26,26,26,26,24,19,14]
+  },
+  'Rangpur, BD': {
+    lat:25.75, lon:89.25, meridian:90, peakMonth:4, clearness:1.0, rhOffset:-5,
+    maxT:[23,26,30,32,32,32,32,32,32,31,29,25], minT:[11,14,18,21,23,25,26,26,26,23,18,13]
+  },
+  'Mymensingh, BD': {
+    lat:24.75, lon:90.40, meridian:90, peakMonth:4, clearness:1.0, rhOffset:3,
+    maxT:[24,27,30,32,32,32,32,32,32,32,30,26], minT:[12,15,19,22,24,26,26,26,26,23,18,14]
+  },
+};
+
+// Approximate average outdoor RH by month for Dhaka (typical dry-season low
+// in winter, rising through a very humid monsoon) — other divisions are
+// offset from this same curve using their rhOffset above, so every division's
+// RH still tracks the same seasonal shape rather than a flat number.
+const DHAKA_RH_BY_MONTH = [55,54,57,66,74,82,84,83,82,78,71,61];
+
+// Applies a location's typical climate data to the Design Conditions fields.
+// Sets latitude/longitude/meridian (fixed geographic facts — never change
+// with month or day) and jumps the Design month to that location's usual
+// peak, then hands off to applyClimateForMonth() for the temperature/RH.
+// Deliberately leaves Indoor setpoint, Indoor RH and Supply air ΔT untouched —
+// those are the designer's chosen targets, not something the site dictates.
+function applyLocationPreset(name){
+  const customInput = document.getElementById('siteNameCustom');
+  if(name === '__custom__'){
+    customInput.style.display = 'block';
+    customInput.focus();
+    return;
+  }
+  customInput.style.display = 'none';
+  const preset = BD_LOCATIONS[name];
+  if(!preset) return;
+  document.getElementById('siteLat').value = preset.lat;
+  document.getElementById('siteLon').value = preset.lon;
+  document.getElementById('siteMeridian').value = preset.meridian;
+  document.getElementById('siteMonth').value = preset.peakMonth;
+  document.getElementById('siteDay').value = 15;
+  applyClimateForMonth();
+  // no explicit re-render call needed here — the generic site-field-change
+  // listener below also fires on this same 'change' event and calls renderAll()
+}
+
+// Refreshes Outdoor design DB, Daily range and Outdoor design RH for whichever
+// month is currently selected, at the currently selected Location — so
+// switching Design month alone (without touching Location) keeps the climate
+// fields honest instead of leaving a stale value from a different month.
+// Winter design DB is the site's coldest month regardless of which month is
+// selected here, so it isn't recomputed on every month change.
+function applyClimateForMonth(){
+  const name = document.getElementById('siteName').value;
+  if(name === '__custom__') return; // custom sites manage their own climate values by hand
+  const preset = BD_LOCATIONS[name];
+  if(!preset) return;
+  const m = parseInt(document.getElementById('siteMonth').value, 10) - 1;
+  if(isNaN(m) || m<0 || m>11) return;
+  const maxT = preset.maxT[m], minT = preset.minT[m];
+  document.getElementById('siteDB').value = maxT + 3;
+  document.getElementById('siteRange').value = maxT - minT;
+  document.getElementById('siteClear').value = preset.clearness;
+  const rh = Math.max(30, Math.min(95, DHAKA_RH_BY_MONTH[m] + preset.rhOffset));
+  document.getElementById('siteRH').value = rh;
+  document.getElementById('siteWinterDB').value = Math.min(...preset.minT) - 3;
+}
+
+document.getElementById('siteName').addEventListener('change', e=> applyLocationPreset(e.target.value));
+document.getElementById('siteNameCustom').addEventListener('change', renderAll);
+document.getElementById('siteMonth').addEventListener('change', applyClimateForMonth);
+
+function getSite(){
+  return {
+    name: (document.getElementById('siteName').value==='__custom__')
+      ? (document.getElementById('siteNameCustom').value || 'Custom location')
+      : document.getElementById('siteName').value,
+    lat: parseFloat(document.getElementById('siteLat').value),
+    lon: parseFloat(document.getElementById('siteLon').value),
+    stdMeridian: parseFloat(document.getElementById('siteMeridian').value),
+    designDay: dayOfYear(parseInt(document.getElementById('siteMonth').value), parseInt(document.getElementById('siteDay').value)),
+    designDB: parseFloat(document.getElementById('siteDB').value),
+    dailyRange: parseFloat(document.getElementById('siteRange').value),
+    clearness: parseFloat(document.getElementById('siteClear').value),
+    outdoorRH: parseFloat(document.getElementById('siteRH').value),
+    Tin: parseFloat(document.getElementById('siteTin').value),
+    TinRH: parseFloat(document.getElementById('siteTinRH').value),
+    supplyDT: parseFloat(document.getElementById('siteSupplyDT').value),
+    winterDB: parseFloat(document.getElementById('siteWinterDB').value)
+  };
+}
+
+// Per-hour load calculation for one room. Returns array of 24 {hr,total,sensible breakdown...}
+function calcRoomHourly(room, site){
+  const out=[];
+  const Wout = humidityRatio(site.designDB, site.outdoorRH);
+  const Win = humidityRatio(site.Tin, site.TinRH);
+  const dW = Math.max(0, Wout-Win);
+  for(let hr=0; hr<24; hr++){
+    const sp=solarPosition(site.lat,site.lon,site.stdMeridian,site.designDay,hr+0.5);
+    let sky={beamNormal:0,diffuseHoriz:0,C:0.1};
+    if(sp.altitude>0) sky=clearSkyIrradiance(sp.altitude,site.designDay,site.clearness);
+    const To = site.designDB - site.dailyRange*DAILY_RANGE_PCT[hr];
+    let wallCond=0, roofCond=0, glassCond=0, glassSolar=0;
+    (room.walls||[]).forEach(w=>{
+      const I = sp.altitude>0 ? surfaceIrradiance(sky.beamNormal,sky.diffuseHoriz,sky.C,sp.altitude,sp.azimuth,90,w.az) : sky.diffuseHoriz*0.5;
+      const Tsa=solAirTemp(To,I,w.absorptance,17.0,0);
+      wallCond += w.U*w.area*(Tsa-site.Tin);
+    });
+    (room.roofs||[]).forEach(r=>{
+      const I = sp.altitude>0 ? surfaceIrradiance(sky.beamNormal,sky.diffuseHoriz,sky.C,sp.altitude,sp.azimuth,0,0) : sky.diffuseHoriz;
+      const Tsa=solAirTemp(To,I,r.absorptance,17.0,3.9);
+      roofCond += r.U*r.area*(Tsa-site.Tin);
+    });
+    (room.glass||[]).forEach(g=>{
+      glassCond += g.U*g.area*(To-site.Tin);
+      const I = sp.altitude>0 ? surfaceIrradiance(sky.beamNormal,sky.diffuseHoriz,sky.C,sp.altitude,sp.azimuth,90,g.az) : sky.diffuseHoriz*0.5;
+      glassSolar += g.area*g.SHGC*g.IAC*I;
+    });
+    const peopleSens = (room.occupants||0)*(room.actSens||70);
+    const peopleLat = (room.occupants||0)*(room.actLat||45);
+    const lighting = (room.lightingW||0)*(room.lightDiversity!=null?room.lightDiversity:1);
+    const equipment = (room.equipmentW||0)*(room.equipDiversity!=null?room.equipDiversity:1);
+    const infilL = room.infilLs||0;
+    const infilSens = 1.23*infilL*(To-site.Tin);
+    const infilLat = 3010*infilL*dW;
+    const envelopeSens = wallCond+roofCond+glassCond+glassSolar;
+    const sensible = envelopeSens + peopleSens + lighting + equipment + Math.max(0,infilSens);
+    const latent = peopleLat + Math.max(0,infilLat);
+    const safety = 1 + (room.safetyPct||0)/100;
+    out.push({
+      hr, To:+To.toFixed(1),
+      wallCond:+wallCond.toFixed(0), roofCond:+roofCond.toFixed(0), glassCond:+glassCond.toFixed(0), glassSolar:+glassSolar.toFixed(0),
+      peopleSens:+peopleSens.toFixed(0), peopleLat:+peopleLat.toFixed(0), lighting:+lighting.toFixed(0), equipment:+equipment.toFixed(0),
+      infilSens:+infilSens.toFixed(0), infilLat:+infilLat.toFixed(0),
+      sensible:+(sensible*safety).toFixed(0), latent:+(latent*safety).toFixed(0), total:+((sensible+latent)*safety).toFixed(0)
+    });
+  }
+  return out;
+}
+function peakOf(hourly){ return hourly.reduce((a,b)=> b.total>a.total? b:a); }
+
+// Heating load (steady state, no solar/internal credit)
+function calcRoomHeating(room, site){
+  let UA=0;
+  (room.walls||[]).forEach(w=> UA += w.U*w.area);
+  (room.roofs||[]).forEach(r=> UA += r.U*r.area);
+  (room.glass||[]).forEach(g=> UA += g.U*g.area);
+  const dT = site.Tin - site.winterDB;
+  const cond = UA*dT;
+  const infil = 1.23*(room.infilLs||0)*dT;
+  const safety=1+(room.safetyPct||0)/100;
+  return +((cond+Math.max(0,infil))*safety).toFixed(0);
+}
+
+/* =========================================================
+   STATE
+   ========================================================= */
+let rooms = [];
+let activeRoomId = null;
+let roomSeq = 1;
+
+function newRoom(name){
+  return {
+    id: roomSeq++, name: name||('Room '+roomSeq),
+    Tin: null, // null = use site default
+    walls: [], roofs: [], glass: [],
+    occupants:0, actSens:70, actLat:45,
+    lightingW:0, lightDiversity:1,
+    equipmentW:0, equipDiversity:1,
+    infilLs:0, safetyPct:10
+  };
+}
+function effTin(room, site){ return room.Tin!=null ? room.Tin : site.Tin; }
+
+/* =========================================================
+   TAB SWITCHING
+   ========================================================= */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* =========================================================
+   ROOM EDITOR RENDERING
+   ========================================================= */
+const U_PRESETS_WALL = [
+  {label:'Custom', val:null},
+  {label:'Light frame (U=2.5)', val:2.5},
+  {label:'Medium masonry (U=1.8)', val:1.8},
+  {label:'Heavy masonry (U=1.0)', val:1.0},
+  {label:'Insulated cavity (U=0.6)', val:0.6}
+];
+const U_PRESETS_ROOF = [
+  {label:'Custom', val:null},
+  {label:'Uninsulated slab (U=3.0)', val:3.0},
+  {label:'Light insulation (U=1.2)', val:1.2},
+  {label:'Well insulated (U=0.5)', val:0.5}
+];
+const U_PRESETS_GLASS = [
+  {label:'Custom', val:null},
+  {label:'Single glazed (U=5.8)', val:5.8},
+  {label:'Double glazed (U=2.8)', val:2.8},
+  {label:'Low-E double (U=1.8)', val:1.8}
+];
+const SHGC_PRESETS = [
+  {label:'Clear (SHGC=0.80)', val:0.80},
+  {label:'Tinted (SHGC=0.60)', val:0.60},
+  {label:'Reflective (SHGC=0.45)', val:0.45},
+  {label:'Low-E (SHGC=0.35)', val:0.35}
+];
+const ABS_PRESETS = [
+  {label:'Light color (α=0.4)', val:0.4},
+  {label:'Medium color (α=0.6)', val:0.6},
+  {label:'Dark color (α=0.9)', val:0.9}
+];
+
+function selectHTML(id, presets, current){
+  return '<select data-field="'+id+'">'+presets.map(p=>
+    '<option value="'+p.val+'"'+(Math.abs((p.val||-999)-(current||-999))<0.001?' selected':'')+'>'+p.label+'</option>'
+  ).join('')+'</select>';
+}
+function orientSelectHTML(current){
+  return '<select data-field="az">'+ORIENTATIONS.map(o=>
+    '<option value="'+o.az+'"'+(o.az===current?' selected':'')+'>'+o.label+'</option>'
+  ).join('')+'</select>';
+}
+
+function renderRoomList(){
+  const ul=document.getElementById('roomList');
+  ul.innerHTML='';
+  const site=getSite();
+  rooms.forEach(r=>{
+    const li=document.createElement('li');
+    li.className='room-list-item'+(r.id===activeRoomId?' active':'');
+    let peakTxt='—';
+    try{
+      const h=calcRoomHourly(r, {...site, Tin:effTin(r,site)});
+      const pk=peakOf(h);
+      peakTxt=(pk.total/1000).toFixed(2)+' kW';
+    }catch(e){}
+    li.innerHTML = escapeHtml(r.name) + '<span class="peak">'+peakTxt+'</span>';
+    li.addEventListener('click', ()=>{ activeRoomId=r.id; renderAll(); });
+    ul.appendChild(li);
+  });
+}
+function escapeHtml(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+function renderRoomEditor(){
+  const wrap=document.getElementById('roomEditorWrap');
+  const room=rooms.find(r=>r.id===activeRoomId);
+  if(!room){ wrap.innerHTML='<div class="card"><h2>Room</h2><div class="note">Add a room to begin.</div></div>'; return; }
+  const site=getSite();
+
+  let html='<div class="card"><h2>Room · <input type="text" id="roomNameInput" style="display:inline-block;width:auto;font-family:var(--sans);font-weight:700;border:none;background:transparent;font-size:14px;" value="'+escapeHtml(room.name)+'"></h2>';
+  html += '<div class="field-row"><div class="field"><label>Indoor setpoint override (°C, blank=site default)</label><input type="number" id="roomTin" step="0.5" value="'+(room.Tin!=null?room.Tin:'')+'" placeholder="'+site.Tin+'"></div>';
+  html += '<div class="field"><label>Safety factor (%)</label><input type="number" id="roomSafety" step="1" value="'+room.safetyPct+'"></div></div>';
+
+  // Walls
+  html += '<h3>Exterior Walls</h3><div id="wallRows">';
+  room.walls.forEach((w,i)=>{
+    html += '<div class="row-item" data-idx="'+i+'" data-kind="walls">';
+    html += '<div><label>Orientation</label>'+orientSelectHTML(w.az)+'</div>';
+    html += '<div><label>Area (m²)</label><input type="number" data-field="area" value="'+w.area+'" step="0.5"></div>';
+    html += '<div><label>U (W/m²K)</label><input type="number" data-field="U" value="'+w.U+'" step="0.05"></div>';
+    html += '<div><label>Absorpt.</label><input type="number" data-field="absorptance" value="'+w.absorptance+'" step="0.05" min="0" max="1"></div>';
+    html += '<div><button class="btn danger" data-remove="walls" data-idx="'+i+'">✕</button></div>';
+    html += '</div>';
+  });
+  html += '</div><button class="btn ghost small" id="addWall">+ Add wall</button>';
+
+  // Roofs
+  html += '<h3>Exposed Roof / Top Slab</h3><div id="roofRows">';
+  room.roofs.forEach((r,i)=>{
+    html += '<div class="row-item" data-idx="'+i+'" data-kind="roofs" style="grid-template-columns:1fr 1fr 1fr 32px;">';
+    html += '<div><label>Area (m²)</label><input type="number" data-field="area" value="'+r.area+'" step="0.5"></div>';
+    html += '<div><label>U (W/m²K)</label><input type="number" data-field="U" value="'+r.U+'" step="0.05"></div>';
+    html += '<div><label>Absorpt.</label><input type="number" data-field="absorptance" value="'+r.absorptance+'" step="0.05" min="0" max="1"></div>';
+    html += '<div><button class="btn danger" data-remove="roofs" data-idx="'+i+'">✕</button></div>';
+    html += '</div>';
+  });
+  html += '</div><button class="btn ghost small" id="addRoof">+ Add roof</button>';
+
+  // Glass
+  html += '<h3>Windows / Glazing</h3><div id="glassRows">';
+  room.glass.forEach((g,i)=>{
+    html += '<div class="row-item" data-idx="'+i+'" data-kind="glass" style="grid-template-columns:0.8fr 0.7fr 0.6fr 0.6fr 0.6fr 32px;">';
+    html += '<div><label>Orientation</label>'+orientSelectHTML(g.az)+'</div>';
+    html += '<div><label>Area (m²)</label><input type="number" data-field="area" value="'+g.area+'" step="0.25"></div>';
+    html += '<div><label>U</label><input type="number" data-field="U" value="'+g.U+'" step="0.1"></div>';
+    html += '<div><label>SHGC</label><input type="number" data-field="SHGC" value="'+g.SHGC+'" step="0.05" min="0" max="1"></div>';
+    html += '<div><label>Shading (IAC)</label><input type="number" data-field="IAC" value="'+g.IAC+'" step="0.05" min="0" max="1"></div>';
+    html += '<div><button class="btn danger" data-remove="glass" data-idx="'+i+'">✕</button></div>';
+    html += '</div>';
+  });
+  html += '</div><button class="btn ghost small" id="addGlass">+ Add window</button>';
+
+  // Internal loads
+  html += '<h3>Internal Loads &amp; Infiltration</h3>';
+  html += '<div class="field-row">';
+  html += '<div class="field"><label>Occupants</label><input type="number" id="roomOcc" value="'+room.occupants+'" step="1"></div>';
+  html += '<div class="field"><label>Sens. W/person</label><input type="number" id="roomActSens" value="'+room.actSens+'" step="5"></div>';
+  html += '<div class="field"><label>Lat. W/person</label><input type="number" id="roomActLat" value="'+room.actLat+'" step="5"></div>';
+  html += '<div class="field"><label>Lighting (W total)</label><input type="number" id="roomLight" value="'+room.lightingW+'" step="10"></div>';
+  html += '<div class="field"><label>Equipment (W total)</label><input type="number" id="roomEquip" value="'+room.equipmentW+'" step="10"></div>';
+  html += '<div class="field"><label>Infiltration (L/s)</label><input type="number" id="roomInfil" value="'+room.infilLs+'" step="1"></div>';
+  html += '</div>';
+
+  html += '<div style="display:flex;gap:8px;margin-top:8px;">';
+  html += '<button class="btn copper" id="calcRoomBtn" style="flex:1;">Calculate Room Loads</button>';
+  html += '<button class="btn danger" id="deleteRoomBtn">Delete Room</button>';
+  html += '</div></div>';
+
+  wrap.innerHTML = html;
+  wireRoomEditorEvents(room);
+}
+
+function wireRoomEditorEvents(room){
+  document.getElementById('roomNameInput').addEventListener('change', e=>{ room.name=e.target.value; renderRoomList(); });
+  document.getElementById('addWall').addEventListener('click', ()=>{ room.walls.push({az:180,area:10,U:1.8,absorptance:0.6}); renderRoomEditor(); });
+  document.getElementById('addRoof').addEventListener('click', ()=>{ room.roofs.push({area:10,U:1.2,absorptance:0.6}); renderRoomEditor(); });
+  document.getElementById('addGlass').addEventListener('click', ()=>{ room.glass.push({az:180,area:4,U:2.8,SHGC:0.6,IAC:1.0}); renderRoomEditor(); });
+
+  ['walls','roofs','glass'].forEach(kind=>{
+    document.querySelectorAll('.row-item[data-kind="'+kind+'"]').forEach(rowEl=>{
+      const idx=parseInt(rowEl.dataset.idx);
+      rowEl.querySelectorAll('[data-field]').forEach(inputEl=>{
+        inputEl.addEventListener('change', e=>{
+          const f=inputEl.dataset.field;
+          const v=parseFloat(e.target.value);
+          room[kind][idx][f] = isNaN(v)? e.target.value : v;
+        });
+      });
+      const rm=rowEl.querySelector('[data-remove]');
+      if(rm) rm.addEventListener('click', ()=>{ room[kind].splice(idx,1); renderRoomEditor(); });
+    });
+  });
+
+  document.getElementById('roomTin').addEventListener('change', e=> room.Tin = e.target.value===''? null : parseFloat(e.target.value));
+  document.getElementById('roomSafety').addEventListener('change', e=> room.safetyPct = parseFloat(e.target.value)||0);
+  document.getElementById('roomOcc').addEventListener('change', e=> room.occupants = parseFloat(e.target.value)||0);
+  document.getElementById('roomActSens').addEventListener('change', e=> room.actSens = parseFloat(e.target.value)||0);
+  document.getElementById('roomActLat').addEventListener('change', e=> room.actLat = parseFloat(e.target.value)||0);
+  document.getElementById('roomLight').addEventListener('change', e=> room.lightingW = parseFloat(e.target.value)||0);
+  document.getElementById('roomEquip').addEventListener('change', e=> room.equipmentW = parseFloat(e.target.value)||0);
+  document.getElementById('roomInfil').addEventListener('change', e=> room.infilLs = parseFloat(e.target.value)||0);
+
+  document.getElementById('calcRoomBtn').addEventListener('click', ()=>{ renderRoomResult(); renderRoomList(); renderBuildingSummary(); });
+  document.getElementById('deleteRoomBtn').addEventListener('click', ()=>{
+    rooms = rooms.filter(r=>r.id!==room.id);
+    activeRoomId = rooms.length? rooms[0].id : null;
+    renderAll();
+  });
+}
+
+function renderRoomResult(){
+  const room=rooms.find(r=>r.id===activeRoomId);
+  const statsEl=document.getElementById('roomResultStats');
+  const chartEl=document.getElementById('roomChart');
+  const tableEl=document.getElementById('roomBreakdownTable');
+  const sheetEl=document.getElementById('liveExcelSheet');
+  if(!room){
+    statsEl.innerHTML=''; chartEl.innerHTML=''; tableEl.innerHTML=''; if(sheetEl) sheetEl.innerHTML='';
+    window.__lastRoomCalc=null; window.__lastRoomDataRows=null;
+    return;
+  }
+  const site=getSite();
+  const siteForRoom={...site, Tin:effTin(room,site)};
+  const hourly=calcRoomHourly(room, siteForRoom);
+  const peak=peakOf(hourly);
+  const heating=calcRoomHeating(room, siteForRoom);
+  const cfmLs = peak.sensible>0 ? peak.sensible/(1.23*site.supplyDT) : 0;
+
+  statsEl.innerHTML =
+    '<div class="stat-strip wide">'+
+    '<div class="stat copper"><div class="val">'+(peak.total/1000).toFixed(2)+' kW</div><div class="lbl">Peak total (hr '+peak.hr+':00)</div></div>'+
+    '<div class="stat"><div class="val">'+(peak.sensible/1000).toFixed(2)+' kW</div><div class="lbl">Sensible</div></div>'+
+    '<div class="stat"><div class="val">'+(peak.latent/1000).toFixed(2)+' kW</div><div class="lbl">Latent</div></div>'+
+    '<div class="stat"><div class="val">'+cfmLs.toFixed(0)+' L/s</div><div class="lbl">Supply air req.</div></div>'+
+    '<div class="stat"><div class="val">'+(peak.total/3517).toFixed(2)+' TR</div><div class="lbl">Cooling (tons refrig.)</div></div>'+
+    '<div class="stat"><div class="val">'+(heating/1000).toFixed(2)+' kW</div><div class="lbl">Heating load (winter)</div></div>'+
+    '</div>';
+
+  // chart — larger canvas for readability
+  const w=760,h=340,pad=36;
+  const maxV=Math.max(...hourly.map(x=>x.total),1);
+  const minV=Math.min(...hourly.map(x=>x.total),0);
+  const xAt=i=> pad + i*(w-2*pad)/23;
+  const yAt=v=> h-pad - (v-minV)/(maxV-minV||1)*(h-2*pad);
+  let path='M '+hourly.map((p,i)=> xAt(i)+','+yAt(p.total)).join(' L ');
+  let gridlines='';
+  for(let g=0; g<=4; g++){
+    const yy=pad+g*(h-2*pad)/4;
+    gridlines += '<line x1="'+pad+'" y1="'+yy+'" x2="'+(w-pad)+'" y2="'+yy+'" stroke="#e4e8ea" stroke-width="1"/>';
+  }
+  const peakX=xAt(peak.hr), peakY=yAt(peak.total);
+  chartEl.setAttribute('viewBox','0 0 '+w+' '+h);
+  chartEl.innerHTML =
+    gridlines+
+    '<path d="'+path+'" fill="none" stroke="#2b4c6f" stroke-width="2.5"/>'+
+    '<circle cx="'+peakX+'" cy="'+peakY+'" r="5.5" fill="#b9773f"/>'+
+    '<text x="'+peakX+'" y="'+(peakY-13)+'" font-size="13" fill="#7d4d20" font-family="monospace" text-anchor="middle">'+(peak.total/1000).toFixed(1)+'kW @'+peak.hr+':00</text>'+
+    '<text x="'+pad+'" y="'+(h-10)+'" font-size="12" fill="#565f66">00:00</text>'+
+    '<text x="'+(w-pad-36)+'" y="'+(h-10)+'" font-size="12" fill="#565f66">23:00</text>';
+
+  tableEl.innerHTML =
+    '<tr><th>Component</th><th class="num">at peak hour '+peak.hr+':00 (W)</th></tr>'+
+    row('Wall conduction (incl. sol-air)', peak.wallCond)+
+    row('Roof conduction (incl. sol-air)', peak.roofCond)+
+    row('Glass conduction', peak.glassCond)+
+    row('Glass solar gain', peak.glassSolar)+
+    row('People — sensible', peak.peopleSens)+
+    row('People — latent', peak.peopleLat)+
+    row('Lighting', peak.lighting)+
+    row('Equipment', peak.equipment)+
+    row('Infiltration — sensible', peak.infilSens)+
+    row('Infiltration — latent', peak.infilLat)+
+    '<tr style="font-weight:700;"><td>Total (incl. safety factor)</td><td class="num">'+peak.total+'</td></tr>';
+
+  function row(label,val){ return '<tr><td>'+label+'</td><td class="num">'+val+'</td></tr>'; }
+
+  // ---- live spreadsheet-style data sheet (also feeds the .xlsx / PDF export) ----
+  const dataRows = buildRoomDataRows(room, siteForRoom, site, peak, heating, cfmLs);
+  window.__lastRoomCalc = {room, site, siteForRoom, peak, heating, cfmLs, hourly, chartW:w, chartH:h};
+  window.__lastRoomDataRows = dataRows;
+  renderLiveExcelSheet(dataRows);
+}
+
+// Builds the flat parameter/value list shared by the on-screen live sheet,
+// the .xlsx export, and the PDF report — so all three always agree.
+function buildRoomDataRows(room, siteForRoom, site, peak, heating, cfmLs){
+  const wallArea=(room.walls||[]).reduce((s,x)=>s+x.area,0);
+  const roofArea=(room.roofs||[]).reduce((s,x)=>s+x.area,0);
+  const glassArea=(room.glass||[]).reduce((s,x)=>s+x.area,0);
+  const R=(label,value)=>({type:'row',label,value});
+  const H=(label)=>({type:'header',label});
+  return [
+    H('Room'),
+    R('Room name', room.name),
+    H('Design Conditions'),
+    R('Location', site.name),
+    R('Design day (month/day)', document.getElementById('siteMonth').value+' / '+document.getElementById('siteDay').value),
+    R('Outdoor design DB (°C)', site.designDB),
+    R('Daily range (°C)', site.dailyRange),
+    R('Indoor setpoint used (°C)', siteForRoom.Tin),
+    R('Indoor RH (%)', site.TinRH),
+    R('Supply air ΔT (°C)', site.supplyDT),
+    R('Winter outdoor design DB (°C)', site.winterDB),
+    H('Room Inputs'),
+    R('Occupants', room.occupants),
+    R('Sensible heat / person (W)', room.actSens),
+    R('Latent heat / person (W)', room.actLat),
+    R('Lighting (W)', room.lightingW),
+    R('Equipment (W)', room.equipmentW),
+    R('Infiltration (L/s)', room.infilLs),
+    R('Safety factor (%)', room.safetyPct),
+    R('Wall area, total (m²)', wallArea.toFixed(2)),
+    R('Roof area, total (m²)', roofArea.toFixed(2)),
+    R('Glass area, total (m²)', glassArea.toFixed(2)),
+    H('Peak-Hour Breakdown (W, hr '+peak.hr+':00)'),
+    R('Wall conduction (incl. sol-air)', peak.wallCond),
+    R('Roof conduction (incl. sol-air)', peak.roofCond),
+    R('Glass conduction', peak.glassCond),
+    R('Glass solar gain', peak.glassSolar),
+    R('People — sensible', peak.peopleSens),
+    R('People — latent', peak.peopleLat),
+    R('Lighting', peak.lighting),
+    R('Equipment', peak.equipment),
+    R('Infiltration — sensible', peak.infilSens),
+    R('Infiltration — latent', peak.infilLat),
+    R('Total (incl. safety factor)', peak.total),
+    H('Results'),
+    R('Peak total (kW)', (peak.total/1000).toFixed(2)+' @ hr '+peak.hr+':00'),
+    R('Sensible (kW)', (peak.sensible/1000).toFixed(2)),
+    R('Latent (kW)', (peak.latent/1000).toFixed(2)),
+    R('Supply air req. (L/s)', cfmLs.toFixed(0)),
+    R('Cooling (TR)', (peak.total/3517).toFixed(2)),
+    R('Heating load, winter steady-state (kW)', (heating/1000).toFixed(2))
+  ];
+}
+
+function renderLiveExcelSheet(dataRows){
+  const el=document.getElementById('liveExcelSheet');
+  if(!el) return;
+  let html='<thead><tr><th class="corner"></th><th>A</th><th>B</th></tr></thead><tbody>';
+  let rn=1;
+  html += '<tr><td class="rownum">'+rn+'</td><td class="xl-h">Parameter</td><td class="xl-h">Value</td></tr>';
+  rn++;
+  dataRows.forEach(r=>{
+    if(r.type==='header'){
+      html += '<tr><td class="rownum">'+rn+'</td><td class="xl-section" colspan="2">'+escapeHtml(r.label)+'</td></tr>';
+    } else {
+      html += '<tr><td class="rownum">'+rn+'</td><td>'+escapeHtml(r.label)+'</td><td class="num">'+escapeHtml(String(r.value))+'</td></tr>';
+    }
+    rn++;
+  });
+  html += '</tbody>';
+  el.innerHTML = html;
+}
+
+/* =========================================================
+   EXPORTS — live Excel sheet (.xlsx) and PDF report
+   ========================================================= */
+function exportRoomXlsx(){
+  const calc=window.__lastRoomCalc, rows=window.__lastRoomDataRows;
+  if(!calc || !rows || typeof XLSX==='undefined'){ alert('Nothing to export yet — calculate a room first.'); return; }
+  const aoa=[['Parameter','Value']];
+  rows.forEach(r=> aoa.push(r.type==='header' ? ['— '+r.label+' —',''] : [r.label, r.value]));
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:42},{wch:24}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Room Result');
+  const safeName=(calc.room.name||'room').replace(/[^a-z0-9]+/gi,'_');
+  XLSX.writeFile(wb, 'HVAC_Room_'+safeName+'.xlsx');
+}
+
+function svgToPngDataUrl(svgEl, pxWidth, pxHeight){
+  return new Promise((resolve,reject)=>{
+    try{
+      const xml=new XMLSerializer().serializeToString(svgEl);
+      const svg64=btoa(unescape(encodeURIComponent(xml)));
+      const img=new Image();
+      // safety net: never let the PDF export hang forever if the image event doesn't fire
+      const timer=setTimeout(()=>reject(new Error('chart image timed out')), 4000);
+      img.onload=()=>{
+        clearTimeout(timer);
+        const canvas=document.createElement('canvas');
+        canvas.width=pxWidth; canvas.height=pxHeight;
+        const ctx=canvas.getContext('2d');
+        ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,pxWidth,pxHeight);
+        ctx.drawImage(img,0,0,pxWidth,pxHeight);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror=(e)=>{ clearTimeout(timer); reject(e); };
+      img.src='data:image/svg+xml;base64,'+svg64;
+    }catch(e){ reject(e); }
+  });
+}
+
+async function exportRoomPdf(){
+  const calc=window.__lastRoomCalc, rows=window.__lastRoomDataRows;
+  if(!calc || !rows || typeof window.jspdf==='undefined'){ alert('Nothing to export yet — calculate a room first.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginX = 42;
+  let y = 48;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.setTextColor(28,53,80);
+  doc.text('HVAC Zone Load Report', marginX, y); y+=20;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+  doc.setTextColor(86,95,102);
+  doc.text('Room: '+calc.room.name+'   |   Site: '+calc.site.name+'   |   Generated: '+new Date().toLocaleString(), marginX, y);
+  y+=8;
+  doc.setDrawColor(185,119,63); doc.setLineWidth(2);
+  doc.line(marginX, y, pageW-marginX, y); y+=22;
+
+  function sectionTitle(t){
+    doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(43,76,111);
+    doc.text(t, marginX, y); y+=6;
+    doc.setDrawColor(215,221,225); doc.setLineWidth(0.75);
+    doc.line(marginX, y, pageW-marginX, y); y+=14;
+  }
+  function kvTable(pairs){
+    const colW=(pageW-2*marginX);
+    doc.setFontSize(9.5);
+    pairs.forEach((p,i)=>{
+      if(y > 760){ doc.addPage(); y=48; }
+      if(i%2===0){ doc.setFillColor(247,249,250); doc.rect(marginX, y-9, colW, 14, 'F'); }
+      doc.setFont('helvetica','normal'); doc.setTextColor(28,34,38);
+      doc.text(String(p[0]), marginX+4, y);
+      doc.setFont('helvetica','bold'); doc.setTextColor(28,53,80);
+      doc.text(String(p[1]), marginX+colW-4, y, {align:'right'});
+      y+=14;
+    });
+    y+=10;
+  }
+
+  // group the shared dataRows into sections for the PDF, same numbers as the live sheet
+  let currentSection=null, pairs=[];
+  const sections=[];
+  rows.forEach(r=>{
+    if(r.type==='header'){
+      if(currentSection) sections.push({title:currentSection, pairs});
+      currentSection=r.label; pairs=[];
+    } else {
+      pairs.push([r.label, r.value]);
+    }
+  });
+  if(currentSection) sections.push({title:currentSection, pairs});
+
+  sections.forEach(s=>{
+    if(s.title==='Room') return; // room name already shown in the subtitle line
+    sectionTitle(s.title);
+    kvTable(s.pairs);
+  });
+
+  // chart image
+  try{
+    const chartEl=document.getElementById('roomChart');
+    const png = await svgToPngDataUrl(chartEl, calc.chartW, calc.chartH);
+    if(y > 560){ doc.addPage(); y=48; }
+    sectionTitle('Load Profile (24 h, design day)');
+    const imgW = pageW-2*marginX;
+    const imgH = imgW * (calc.chartH/calc.chartW);
+    doc.addImage(png, 'PNG', marginX, y, imgW, imgH);
+    y += imgH + 16;
+  }catch(e){ /* chart image is a nice-to-have; skip silently if it fails */ }
+
+  doc.setFontSize(8); doc.setTextColor(120,128,134);
+  doc.text('Simplified, standards-based engineering tool for preliminary design — not a substitute for full detailed calculation software or professional engineering judgment on final design documents.', marginX, 812, {maxWidth: pageW-2*marginX});
+
+  const safeName=(calc.room.name||'room').replace(/[^a-z0-9]+/gi,'_');
+  doc.save('HVAC_Report_'+safeName+'.pdf');
+}
+
+document.getElementById('exportRoomXlsx').addEventListener('click', exportRoomXlsx);
+document.getElementById('exportRoomPdf').addEventListener('click', exportRoomPdf);
+
+function renderBuildingSummary(){
+  const site=getSite();
+  const tbl=document.getElementById('buildingSummaryTable');
+  const statsEl=document.getElementById('buildingResultStats');
+  const chartEl=document.getElementById('buildingChart');
+  const roomsTblEl=document.getElementById('buildingRoomsTable');
+  const sheetEl=document.getElementById('buildingExcelSheet');
+
+  if(!rooms.length){
+    tbl.innerHTML='<tr><td>No rooms yet</td></tr>';
+    if(statsEl) statsEl.innerHTML='<div class="note">Add at least one room in Tab 1 to see the building total.</div>';
+    if(chartEl) chartEl.innerHTML='';
+    if(roomsTblEl) roomsTblEl.innerHTML='';
+    if(sheetEl) sheetEl.innerHTML='';
+    window.__buildingRoomRows=null; window.__buildingDataRows=null; window.__buildingChartWH=null;
+    return;
+  }
+
+  let sumOfPeaks=0, sumOfHeating=0;
+  const hourlyTotals=new Array(24).fill(0);
+  const perRoom=[];
+  rooms.forEach(r=>{
+    const siteForRoom={...site, Tin:effTin(r,site)};
+    const hourly=calcRoomHourly(r, siteForRoom);
+    const pk=peakOf(hourly);
+    const heat=calcRoomHeating(r, siteForRoom);
+    sumOfPeaks += pk.total;
+    sumOfHeating += heat;
+    hourly.forEach((h,i)=> hourlyTotals[i]+=h.total);
+    perRoom.push({
+      name:r.name, peakKW:pk.total/1000, peakTR:pk.total/3517, peakHr:pk.hr,
+      sensKW:pk.sensible/1000, latKW:pk.latent/1000, heatKW:heat/1000
+    });
+  });
+  let blockPeakHr=0, blockPeakVal=-Infinity;
+  hourlyTotals.forEach((v,i)=>{ if(v>blockPeakVal){ blockPeakVal=v; blockPeakHr=i; } });
+  const diversityPct = sumOfPeaks>0 ? (blockPeakVal/sumOfPeaks*100) : 0;
+
+  // ---- small sidebar summary table (unchanged shape) ----
+  tbl.innerHTML =
+    '<tr><th>Metric</th><th class="num">kW</th><th class="num">TR</th></tr>'+
+    '<tr><td>Sum of room peaks</td><td class="num">'+(sumOfPeaks/1000).toFixed(2)+'</td><td class="num">'+(sumOfPeaks/3517).toFixed(2)+'</td></tr>'+
+    '<tr><td>Block load (hr '+blockPeakHr+':00)</td><td class="num">'+(blockPeakVal/1000).toFixed(2)+'</td><td class="num">'+(blockPeakVal/3517).toFixed(2)+'</td></tr>';
+
+  // ---- full "All Rooms" section: stats strip ----
+  if(statsEl){
+    statsEl.innerHTML =
+      '<div class="stat-strip wide">'+
+      '<div class="stat"><div class="val">'+rooms.length+'</div><div class="lbl">Rooms</div></div>'+
+      '<div class="stat"><div class="val">'+(sumOfPeaks/1000).toFixed(2)+' kW</div><div class="lbl">Sum of room peaks</div></div>'+
+      '<div class="stat"><div class="val">'+(sumOfPeaks/3517).toFixed(2)+' TR</div><div class="lbl">Sum of peaks (TR)</div></div>'+
+      '<div class="stat copper"><div class="val">'+(blockPeakVal/1000).toFixed(2)+' kW</div><div class="lbl">Block load (hr '+blockPeakHr+':00)</div></div>'+
+      '<div class="stat"><div class="val">'+(blockPeakVal/3517).toFixed(2)+' TR</div><div class="lbl">Block load (TR)</div></div>'+
+      '<div class="stat"><div class="val">'+(sumOfHeating/1000).toFixed(2)+' kW</div><div class="lbl">Total heating (sum)</div></div>'+
+      '</div>';
+  }
+
+  // ---- aggregate 24-hour chart (same look/size as the room chart) ----
+  if(chartEl){
+    const w=760,h=340,pad=36;
+    const maxV=Math.max(...hourlyTotals,1);
+    const minV=Math.min(...hourlyTotals,0);
+    const xAt=i=> pad + i*(w-2*pad)/23;
+    const yAt=v=> h-pad - (v-minV)/(maxV-minV||1)*(h-2*pad);
+    let path='M '+hourlyTotals.map((v,i)=> xAt(i)+','+yAt(v)).join(' L ');
+    let gridlines='';
+    for(let g=0; g<=4; g++){
+      const yy=pad+g*(h-2*pad)/4;
+      gridlines += '<line x1="'+pad+'" y1="'+yy+'" x2="'+(w-pad)+'" y2="'+yy+'" stroke="#e4e8ea" stroke-width="1"/>';
+    }
+    const peakX=xAt(blockPeakHr), peakY=yAt(blockPeakVal);
+    chartEl.setAttribute('viewBox','0 0 '+w+' '+h);
+    chartEl.innerHTML =
+      gridlines+
+      '<path d="'+path+'" fill="none" stroke="#2b4c6f" stroke-width="2.5"/>'+
+      '<circle cx="'+peakX+'" cy="'+peakY+'" r="5.5" fill="#b9773f"/>'+
+      '<text x="'+peakX+'" y="'+(peakY-13)+'" font-size="13" fill="#7d4d20" font-family="monospace" text-anchor="middle">'+(blockPeakVal/1000).toFixed(1)+'kW @'+blockPeakHr+':00</text>'+
+      '<text x="'+pad+'" y="'+(h-10)+'" font-size="12" fill="#565f66">00:00</text>'+
+      '<text x="'+(w-pad-36)+'" y="'+(h-10)+'" font-size="12" fill="#565f66">23:00</text>';
+    window.__buildingChartWH = {w,h};
+  }
+
+  // ---- per-room breakdown table (under the chart) ----
+  if(roomsTblEl){
+    roomsTblEl.innerHTML =
+      '<tr><th>Room</th><th class="num">Peak (kW)</th><th class="num">Peak (TR)</th><th class="num">Hr</th><th class="num">Sens. (kW)</th><th class="num">Lat. (kW)</th><th class="num">Heat (kW)</th></tr>'+
+      perRoom.map(r=>
+        '<tr><td>'+escapeHtml(r.name)+'</td><td class="num">'+r.peakKW.toFixed(2)+'</td><td class="num">'+r.peakTR.toFixed(2)+'</td>'+
+        '<td class="num">'+r.peakHr+'</td><td class="num">'+r.sensKW.toFixed(2)+'</td><td class="num">'+r.latKW.toFixed(2)+'</td><td class="num">'+r.heatKW.toFixed(2)+'</td></tr>'
+      ).join('')+
+      '<tr style="font-weight:700;"><td>Sum of peaks</td><td class="num">'+(sumOfPeaks/1000).toFixed(2)+'</td><td class="num">'+(sumOfPeaks/3517).toFixed(2)+'</td><td></td><td></td><td></td><td class="num">'+(sumOfHeating/1000).toFixed(2)+'</td></tr>'+
+      '<tr style="font-weight:700;"><td>Block load (hr '+blockPeakHr+':00)</td><td class="num">'+(blockPeakVal/1000).toFixed(2)+'</td><td class="num">'+(blockPeakVal/3517).toFixed(2)+'</td><td></td><td></td><td></td><td></td></tr>';
+  }
+
+  const buildingRows = {perRoom, sumOfPeaksKW:sumOfPeaks/1000, sumOfPeaksTR:sumOfPeaks/3517,
+    blockPeakKW:blockPeakVal/1000, blockPeakTR:blockPeakVal/3517, blockPeakHr,
+    sumOfHeatingKW:sumOfHeating/1000, diversityPct, roomCount:rooms.length, siteName:site.name};
+
+  // ---- live spreadsheet-style sheet (also feeds .xlsx / PDF export) ----
+  if(sheetEl){
+    renderBuildingExcelSheet(buildingRows);
+  }
+
+  // stash for other tabs + exports
+  window.__buildingBlockKW = blockPeakVal/1000;
+  window.__buildingSumPeaksKW = sumOfPeaks/1000;
+  window.__buildingRoomRows = buildingRows;
+}
+
+function renderBuildingExcelSheet(b){
+  const el=document.getElementById('buildingExcelSheet');
+  if(!el) return;
+  const cols=['Room','Peak (kW)','Peak (TR)','Peak Hr','Sens. (kW)','Lat. (kW)','Heat (kW)'];
+  const letters=['A','B','C','D','E','F','G'];
+  let html='<thead><tr><th class="corner"></th>'+letters.map(l=>'<th>'+l+'</th>').join('')+'</tr></thead><tbody>';
+  let rn=1;
+  html += '<tr><td class="rownum">'+rn+'</td>'+cols.map(c=>'<td class="xl-h">'+c+'</td>').join('')+'</tr>';
+  rn++;
+  b.perRoom.forEach(r=>{
+    html += '<tr><td class="rownum">'+rn+'</td><td>'+escapeHtml(r.name)+'</td><td class="num">'+r.peakKW.toFixed(2)+'</td>'+
+      '<td class="num">'+r.peakTR.toFixed(2)+'</td><td class="num">'+r.peakHr+'</td><td class="num">'+r.sensKW.toFixed(2)+'</td>'+
+      '<td class="num">'+r.latKW.toFixed(2)+'</td><td class="num">'+r.heatKW.toFixed(2)+'</td></tr>';
+    rn++;
+  });
+  html += '<tr><td class="rownum">'+rn+'</td><td class="xl-section" colspan="7">Totals</td></tr>'; rn++;
+  html += '<tr><td class="rownum">'+rn+'</td><td>Sum of peaks</td><td class="num">'+b.sumOfPeaksKW.toFixed(2)+'</td><td class="num">'+b.sumOfPeaksTR.toFixed(2)+'</td><td></td><td></td><td></td><td class="num">'+b.sumOfHeatingKW.toFixed(2)+'</td></tr>'; rn++;
+  html += '<tr><td class="rownum">'+rn+'</td><td>Block load (hr '+b.blockPeakHr+':00)</td><td class="num">'+b.blockPeakKW.toFixed(2)+'</td><td class="num">'+b.blockPeakTR.toFixed(2)+'</td><td></td><td></td><td></td><td></td></tr>'; rn++;
+  html += '<tr><td class="rownum">'+rn+'</td><td>Diversity (block ÷ sum of peaks)</td><td class="num" colspan="6">'+b.diversityPct.toFixed(0)+'%</td></tr>';
+  html += '</tbody>';
+  el.innerHTML = html;
+}
+
+function exportBuildingXlsx(){
+  const b=window.__buildingRoomRows;
+  if(!b || typeof XLSX==='undefined'){ alert('Add at least one room first.'); return; }
+  const aoa=[['Room','Peak (kW)','Peak (TR)','Peak Hour','Sensible (kW)','Latent (kW)','Heating (kW)']];
+  b.perRoom.forEach(r=> aoa.push([r.name, r.peakKW.toFixed(2), r.peakTR.toFixed(2), r.peakHr+':00', r.sensKW.toFixed(2), r.latKW.toFixed(2), r.heatKW.toFixed(2)]));
+  aoa.push(['', '', '', '', '', '', '']);
+  aoa.push(['Sum of room peaks', b.sumOfPeaksKW.toFixed(2), b.sumOfPeaksTR.toFixed(2), '', '', '', b.sumOfHeatingKW.toFixed(2)]);
+  aoa.push(['Block load', b.blockPeakKW.toFixed(2), b.blockPeakTR.toFixed(2), b.blockPeakHr+':00', '', '', '']);
+  aoa.push(['Diversity (block ÷ sum of peaks)', b.diversityPct.toFixed(0)+'%', '', '', '', '', '']);
+  const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:28},{wch:12},{wch:12},{wch:12},{wch:14},{wch:14},{wch:14}];
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Building Summary');
+  XLSX.writeFile(wb, 'HVAC_Building_Summary.xlsx');
+}
+document.getElementById('exportBuildingXlsx').addEventListener('click', exportBuildingXlsx);
+
+async function exportBuildingPdf(){
+  const b=window.__buildingRoomRows;
+  if(!b || typeof window.jspdf==='undefined'){ alert('Add at least one room first.'); return; }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:'pt', format:'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const marginX = 42;
+  let y = 48;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(16);
+  doc.setTextColor(28,53,80);
+  doc.text('HVAC Building Load Report', marginX, y); y+=20;
+  doc.setFont('helvetica','normal'); doc.setFontSize(10.5);
+  doc.setTextColor(86,95,102);
+  doc.text('Site: '+b.siteName+'   |   Rooms: '+b.roomCount+'   |   Generated: '+new Date().toLocaleString(), marginX, y);
+  y+=8;
+  doc.setDrawColor(185,119,63); doc.setLineWidth(2);
+  doc.line(marginX, y, pageW-marginX, y); y+=22;
+
+  function sectionTitle(t){
+    doc.setFont('helvetica','bold'); doc.setFontSize(11.5); doc.setTextColor(43,76,111);
+    doc.text(t, marginX, y); y+=6;
+    doc.setDrawColor(215,221,225); doc.setLineWidth(0.75);
+    doc.line(marginX, y, pageW-marginX, y); y+=14;
+  }
+
+  // multi-column grid table (used for the per-room breakdown)
+  function gridTable(headers, colWidths, rows, boldLast){
+    const totalW = colWidths.reduce((s,w)=>s+w,0);
+    const scale = (pageW-2*marginX)/totalW;
+    const widths = colWidths.map(w=>w*scale);
+    doc.setFontSize(9);
+    // header row
+    doc.setFillColor(43,76,111);
+    doc.rect(marginX, y-9, pageW-2*marginX, 14, 'F');
+    doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+    let cx = marginX;
+    headers.forEach((h,i)=>{ doc.text(String(h), cx+4, y, {maxWidth:widths[i]-6}); cx+=widths[i]; });
+    y+=15;
+    rows.forEach((row,ri)=>{
+      if(y > 770){ doc.addPage(); y=48; }
+      const isLast = boldLast && ri===rows.length-1;
+      if(ri%2===0 && !isLast){ doc.setFillColor(247,249,250); doc.rect(marginX, y-9, pageW-2*marginX, 14, 'F'); }
+      doc.setFont('helvetica', isLast?'bold':'normal'); doc.setTextColor(28,34,38);
+      cx = marginX;
+      row.forEach((cell,i)=>{
+        const align = i===0 ? 'left' : 'right';
+        const tx = align==='left' ? cx+4 : cx+widths[i]-4;
+        doc.text(String(cell), tx, y, {align, maxWidth:widths[i]-6});
+        cx+=widths[i];
+      });
+      y+=14;
+    });
+    y+=10;
+  }
+
+  sectionTitle('Per-Room Results');
+  const headers=['Room','Peak (kW)','Peak (TR)','Hr','Sens. (kW)','Lat. (kW)','Heat (kW)'];
+  const colWidths=[34,12,12,8,12,12,12];
+  const rows = b.perRoom.map(r=>[r.name, r.peakKW.toFixed(2), r.peakTR.toFixed(2), r.peakHr, r.sensKW.toFixed(2), r.latKW.toFixed(2), r.heatKW.toFixed(2)]);
+  rows.push(['Sum of peaks', b.sumOfPeaksKW.toFixed(2), b.sumOfPeaksTR.toFixed(2), '', '', '', b.sumOfHeatingKW.toFixed(2)]);
+  gridTable(headers, colWidths, rows, true);
+
+  sectionTitle('Building Summary');
+  const summaryRows=[
+    ['Number of rooms', String(b.roomCount)],
+    ['Sum of room peaks', b.sumOfPeaksKW.toFixed(2)+' kW  /  '+b.sumOfPeaksTR.toFixed(2)+' TR'],
+    ['Block load (hr '+b.blockPeakHr+':00)', b.blockPeakKW.toFixed(2)+' kW  /  '+b.blockPeakTR.toFixed(2)+' TR'],
+    ['Diversity (block ÷ sum of peaks)', b.diversityPct.toFixed(0)+'%'],
+    ['Total heating load (sum of rooms)', b.sumOfHeatingKW.toFixed(2)+' kW'],
+  ];
+  const colW2=(pageW-2*marginX);
+  doc.setFontSize(9.5);
+  summaryRows.forEach((p,i)=>{
+    if(y > 770){ doc.addPage(); y=48; }
+    if(i%2===0){ doc.setFillColor(247,249,250); doc.rect(marginX, y-9, colW2, 14, 'F'); }
+    doc.setFont('helvetica','normal'); doc.setTextColor(28,34,38);
+    doc.text(String(p[0]), marginX+4, y);
+    doc.setFont('helvetica','bold'); doc.setTextColor(28,53,80);
+    doc.text(String(p[1]), marginX+colW2-4, y, {align:'right'});
+    y+=14;
+  });
+  y+=10;
+
+  // aggregate chart image
+  try{
+    const chartEl=document.getElementById('buildingChart');
+    const wh = window.__buildingChartWH || {w:760,h:340};
+    const png = await svgToPngDataUrl(chartEl, wh.w, wh.h);
+    if(y > 560){ doc.addPage(); y=48; }
+    sectionTitle('Aggregate Load Profile (24 h, all rooms)');
+    const imgW = pageW-2*marginX;
+    const imgH = imgW * (wh.h/wh.w);
+    doc.addImage(png, 'PNG', marginX, y, imgW, imgH);
+    y += imgH + 16;
+  }catch(e){ /* chart image is a nice-to-have; skip silently if it fails */ }
+
+  doc.setFontSize(8); doc.setTextColor(120,128,134);
+  doc.text('Simplified, standards-based engineering tool for preliminary design — not a substitute for full detailed calculation software or professional engineering judgment on final design documents.', marginX, 812, {maxWidth: pageW-2*marginX});
+
+  doc.save('HVAC_Building_Report.pdf');
+}
+document.getElementById('exportBuildingPdf').addEventListener('click', exportBuildingPdf);
+
+
+function renderAll(){
+  renderRoomList();
+  renderRoomEditor();
+  renderRoomResult();
+  renderBuildingSummary();
+}
+
+document.getElementById('addRoomBtn').addEventListener('click', ()=>{
+  const r=newRoom('Room '+roomSeq);
+  rooms.push(r);
+  activeRoomId=r.id;
+  renderAll();
+});
+
+// site field changes trigger full recompute
+['siteName','siteLat','siteLon','siteMeridian','siteMonth','siteDay','siteDB','siteRange','siteClear','siteRH','siteTin','siteTinRH','siteSupplyDT','siteWinterDB']
+  .forEach(id=> document.getElementById(id).addEventListener('change', renderAll));
+
+// seed one example room
+(function seed(){
+  const r=newRoom('Guest Room 501 (corner)');
+  r.walls=[{az:270,area:18,U:1.8,absorptance:0.6},{az:180,area:12,U:1.8,absorptance:0.6}];
+  r.glass=[{az:270,area:5,U:2.8,SHGC:0.55,IAC:0.85}];
+  r.occupants=2; r.lightingW=120; r.equipmentW=250; r.infilLs=15;
+  rooms.push(r);
+  activeRoomId=r.id;
+  renderAll();
+})();
+
+/* =========================================================
+   TAB 2: ENERGY & COST
+   ========================================================= */
+const MONTH_NAMES=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const MONTH_DAYS=[31,28,31,30,31,30,31,31,30,31,30,31];
+const DHAKA_DEFAULT_TEMPS=[19,22,27,29,29,29,28,28,28,27,24,20]; // approximate monthly averages, user-editable
+(function buildMonthGrid(){
+  const g=document.getElementById('monthGrid');
+  g.innerHTML = MONTH_NAMES.map((m,i)=>
+    '<div class="m"><label>'+m+'</label><input type="number" id="mTemp'+i+'" value="'+DHAKA_DEFAULT_TEMPS[i]+'" step="0.5"></div>'
+  ).join('');
+})();
+
+let energyMethod='monthly';
+document.querySelectorAll('.method-toggle button').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.method-toggle button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+    energyMethod=b.dataset.method;
+    document.getElementById('monthlyBlock').style.display = energyMethod==='monthly'?'block':'none';
+    document.getElementById('ddBlock').style.display = energyMethod==='dd'?'block':'none';
+  });
+});
+
+document.getElementById('pullFromLoads').addEventListener('click', ()=>{
+  document.getElementById('enPeakCool').value = (window.__buildingBlockKW||0).toFixed(2);
+});
+
+document.getElementById('calcEnergyBtn').addEventListener('click', ()=>{
+  const peakCoolKW=parseFloat(document.getElementById('enPeakCool').value)||0;
+  const peakHeatKW=parseFloat(document.getElementById('enPeakHeat').value)||0;
+  const site=getSite();
+  const baseTemp = parseFloat(document.getElementById('baseTempC').value)||24;
+
+  let CDD=0, HDD=0, monthlyCDD=new Array(12).fill(0);
+  if(energyMethod==='monthly'){
+    for(let i=0;i<12;i++){
+      const t=parseFloat(document.getElementById('mTemp'+i).value);
+      const cdd=Math.max(0, t-baseTemp)*MONTH_DAYS[i];
+      const hdd=Math.max(0, baseTemp-t)*MONTH_DAYS[i];
+      monthlyCDD[i]=cdd;
+      CDD+=cdd; HDD+=hdd;
+    }
+  } else {
+    CDD=parseFloat(document.getElementById('cddDirect').value)||0;
+    HDD=parseFloat(document.getElementById('hddDirect').value)||0;
+    // spread evenly across months for the chart if direct entry used
+    for(let i=0;i<12;i++) monthlyCDD[i]=CDD/12;
+  }
+
+  const designDT_cool = Math.max(1, site.designDB - site.Tin);
+  const designDT_heat = Math.max(1, site.Tin - site.winterDB);
+  const UA_cool = peakCoolKW / designDT_cool; // kW/°C
+  const UA_heat = peakHeatKW / designDT_heat;
+
+  const copCool=parseFloat(document.getElementById('copCool').value)||3.2;
+  const copHeat=parseFloat(document.getElementById('copHeat').value)||0.95;
+
+  const coolEnergyKWh = UA_cool*CDD*24/copCool;
+  const heatEnergyKWh = UA_heat*HDD*24/copHeat;
+  const totalKWh = coolEnergyKWh+heatEnergyKWh;
+
+  const rate=parseFloat(document.getElementById('rateFlat').value)||0;
+  const fixed=parseFloat(document.getElementById('rateFixed').value)||0;
+  const curr=document.getElementById('currSym').value||'';
+  const annualCost = totalKWh*rate + fixed*12;
+
+  document.getElementById('energyStats').innerHTML =
+    stat(totalKWh.toFixed(0)+' kWh','Annual energy (est.)')+
+    stat(curr+' '+annualCost.toFixed(0),'Annual cost (est.)','copper')+
+    stat(coolEnergyKWh.toFixed(0)+' kWh','Cooling energy')+
+    stat(heatEnergyKWh.toFixed(0)+' kWh','Heating energy');
+
+  function stat(val,lbl,cls){ return '<div class="stat'+(cls?' '+cls:'')+'"><div class="val">'+val+'</div><div class="lbl">'+lbl+'</div></div>'; }
+
+  // monthly chart (cooling energy distribution as proxy) — enlarged canvas
+  const w=760,h=340,pad=40, barW=(w-2*pad)/12*0.6;
+  const maxM=Math.max(...monthlyCDD,1);
+  let bars='';
+  monthlyCDD.forEach((v,i)=>{
+    const x=pad+i*(w-2*pad)/12 + ((w-2*pad)/12-barW)/2;
+    const bh=(v/maxM)*(h-2*pad*1.4);
+    const y=h-pad-bh;
+    bars += '<rect x="'+x+'" y="'+y+'" width="'+barW+'" height="'+bh+'" fill="#2b4c6f"/>';
+    bars += '<text x="'+(x+barW/2)+'" y="'+(h-pad+16)+'" font-size="11" fill="#565f66" text-anchor="middle">'+MONTH_NAMES[i]+'</text>';
+  });
+  const chartEl=document.getElementById('energyChart');
+  chartEl.setAttribute('viewBox','0 0 '+w+' '+h);
+  chartEl.innerHTML = bars;
+
+  document.getElementById('energyTable').innerHTML =
+    '<tr><th>Parameter</th><th class="num">Value</th></tr>'+
+    '<tr><td>Cooling degree-days (base '+baseTemp+'°C)</td><td class="num">'+CDD.toFixed(0)+'</td></tr>'+
+    '<tr><td>Heating degree-days (base '+baseTemp+'°C)</td><td class="num">'+HDD.toFixed(0)+'</td></tr>'+
+    '<tr><td>Effective cooling UA</td><td class="num">'+UA_cool.toFixed(3)+' kW/°C</td></tr>'+
+    '<tr><td>Effective heating UA</td><td class="num">'+UA_heat.toFixed(3)+' kW/°C</td></tr>'+
+    '<tr><td>Design cooling ΔT</td><td class="num">'+designDT_cool.toFixed(1)+' °C</td></tr>'+
+    '<tr><td>Design heating ΔT</td><td class="num">'+designDT_heat.toFixed(1)+' °C</td></tr>';
+});
+
+/* =========================================================
+   TAB 3: EQUIPMENT SELECTION
+   ========================================================= */
+const CAPACITY_STEPS_TR=[1,1.5,2,3,4,5,7.5,10,12.5,15,20,25,30,40,50,60,75,90,100,120,150,175,200,250,300];
+
+document.getElementById('eqPullBtn').addEventListener('click', ()=>{
+  document.getElementById('eqLoadKW').value = (window.__buildingBlockKW||0).toFixed(2);
+});
+
+function nextStepTR(tr){
+  for(const s of CAPACITY_STEPS_TR){ if(s>=tr-1e-6) return s; }
+  return Math.ceil(tr/50)*50;
+}
+
+document.getElementById('calcEqBtn').addEventListener('click', ()=>{
+  const loadKW=parseFloat(document.getElementById('eqLoadKW').value)||0;
+  const diversity=parseFloat(document.getElementById('eqDiversity').value)||1;
+  const safetyPct=parseFloat(document.getElementById('eqSafety').value)||0;
+  const redundancy=document.getElementById('eqRedundancy').value;
+
+  const designLoadKW = loadKW*diversity*(1+safetyPct/100);
+  const designLoadTR = designLoadKW/3.517;
+
+  let units, fractionEach, label;
+  if(redundancy==='1'){ units=1; fractionEach=1; label='1 unit, 100%'; }
+  else if(redundancy==='n1'){ units=2; fractionEach=1; label='N+1: 2 full-capacity units (1 duty + 1 standby)'; }
+  else if(redundancy==='2x50'){ units=2; fractionEach=0.5; label='2 units at 50% each'; }
+  else if(redundancy==='3x50'){ units=3; fractionEach=0.5; label='3 units at 50% each (1 spare)'; }
+  else if(redundancy==='4x33'){ units=4; fractionEach=1/3; label='4 units at ~33% each (1 spare)'; }
+
+  const perUnitTR = redundancy==='n1' ? designLoadTR : designLoadTR*fractionEach;
+  const selectedStepTR = nextStepTR(perUnitTR);
+  const installedTR = redundancy==='n1' ? selectedStepTR*2 : selectedStepTR*units;
+  const dutyTR = redundancy==='n1' ? selectedStepTR : selectedStepTR*(units - (redundancy==='2x50'?0:redundancy==='3x50'?1:redundancy==='4x33'?1:0));
+  const spareRatio = ((installedTR-designLoadTR)/designLoadTR*100);
+
+  document.getElementById('eqStats').innerHTML =
+    '<div class="stat copper"><div class="val">'+designLoadTR.toFixed(1)+' TR</div><div class="lbl">Design load (after diversity+safety)</div></div>'+
+    '<div class="stat"><div class="val">'+units+' × '+selectedStepTR+' TR</div><div class="lbl">'+label+'</div></div>'+
+    '<div class="stat"><div class="val">'+installedTR.toFixed(1)+' TR</div><div class="lbl">Total installed capacity</div></div>'+
+    '<div class="stat"><div class="val">'+spareRatio.toFixed(0)+'%</div><div class="lbl">Margin over design load</div></div>';
+
+  document.getElementById('eqTable').innerHTML =
+    '<tr><th>Parameter</th><th class="num">Value</th></tr>'+
+    '<tr><td>Raw peak block load</td><td class="num">'+loadKW.toFixed(1)+' kW ('+(loadKW/3.517).toFixed(1)+' TR)</td></tr>'+
+    '<tr><td>After diversity ('+diversity+') &amp; safety ('+safetyPct+'%)</td><td class="num">'+designLoadKW.toFixed(1)+' kW ('+designLoadTR.toFixed(1)+' TR)</td></tr>'+
+    '<tr><td>Selected standard step per unit</td><td class="num">'+selectedStepTR+' TR</td></tr>'+
+    '<tr><td>Configuration</td><td class="num">'+label+'</td></tr>'+
+    '<tr><td>Total installed capacity</td><td class="num">'+installedTR.toFixed(1)+' TR</td></tr>';
+});
+
+(function renderReferenceTables(){
+  function fill(id, presets, unitLabel){
+    const rows = presets.filter(p=>p.val!=null).map(p=>'<tr><td>'+p.label.replace(/\s*\([^)]*\)/,'')+'</td><td class="num">'+p.val+'</td></tr>').join('');
+    document.getElementById(id).innerHTML = '<tr><th>Type</th><th class="num">'+unitLabel+'</th></tr>'+rows;
+  }
+  fill('refWallTable', U_PRESETS_WALL, 'U (W/m²K)');
+  fill('refRoofTable', U_PRESETS_ROOF, 'U (W/m²K)');
+  fill('refGlassTable', U_PRESETS_GLASS, 'U (W/m²K)');
+  fill('refShgcTable', SHGC_PRESETS, 'SHGC');
+  fill('refAbsTable', ABS_PRESETS, 'α');
+})();
+
+document.getElementById('eqGuideTable').innerHTML =
+  '<tr><th>Type</th><th>Typical capacity</th><th>Typical eff.</th><th>Best fit</th></tr>'+
+  guideRow('VRF / VRV','7–150 TR (modular)','COP 3.5–4.5','Mixed-use, zoned control, phased buildout')+
+  guideRow('Ducted split / packaged unit','1–25 TR','COP 2.8–3.5','Small commercial, single zones, low first cost')+
+  guideRow('Air-cooled chiller','20–500 TR','COP 2.8–3.6','Mid-rise, no cooling tower space/water')+
+  guideRow('Water-cooled chiller','50–2000+ TR','COP 5–7','Large buildings, central plant, best efficiency')+
+  guideRow('Packaged rooftop unit','3–50 TR','COP 3.0–3.8','Single-story retail/industrial, simple ducting');
+function guideRow(a,b,c,d){ return '<tr><td>'+a+'</td><td>'+b+'</td><td>'+c+'</td><td>'+d+'</td></tr>'; }
+
+/* =========================================================
+   INTERACTIVE WALKTHROUGH
+   A floating panel that steps through every input across all 3 tabs:
+   what to type, an example value, and why the tool needs it.
+   ========================================================= */
+const WT_STEPS = [
+  // ---- Tab 1: Design Conditions ----
+  {tab:'loads', id:'siteName', label:'Location', group:'Design Conditions', example:'Dhaka, BD', isSelect:true, fillValue:'Dhaka, BD',
+   why:'Pick your division here and the latitude, longitude, standard meridian, design month, outdoor design DB, daily range, sky clearness, outdoor RH and winter design DB all auto-fill with typical values for that location — one change updates the whole climate picture. Pick "Other / custom location…" to type a different site and enter its climate data manually.'},
+  {tab:'loads', id:'siteLat', label:'Latitude (°N)', group:'Design Conditions', example:'23.81',
+   why:'Sets the sun\u2019s path for the day — drives solar altitude/azimuth at every hour, which is what pushes solar heat gain through walls, roof and glass. Auto-fills from the Location dropdown above; override here for a more precise site coordinate. Use a negative number for southern-hemisphere sites.'},
+  {tab:'loads', id:'siteLon', label:'Longitude (°E)', group:'Design Conditions', example:'90.41',
+   why:'Paired with the standard meridian to correct solar time to your local clock time, so the peak hour shown in the results (e.g. "15:00") actually lines up with your wall clock. Auto-fills from Location above.'},
+  {tab:'loads', id:'siteMeridian', label:'Std meridian (°E)', group:'Design Conditions', example:'90',
+   why:'The reference meridian for your time zone (e.g. GMT+6 → 90°E). Used with longitude for the solar-time-to-clock-time correction. Auto-fills from Location above (all of Bangladesh shares one meridian, 90°E).'},
+  {tab:'loads', id:'siteMonth', label:'Design month', group:'Design Conditions', example:'4 — April', isSelect:true, fillValue:'4',
+   why:'Picks which month\u2019s sun angle and typical peak heat to design for — normally your hottest month, since that\u2019s what the cooling equipment actually has to survive. Auto-fills from Location above; changing the month on its own also refreshes Outdoor design DB, Daily range and Outdoor RH to that month\u2019s typical values, so you can check any month without stale climate numbers left over from another one.'},
+  {tab:'loads', id:'siteDay', label:'Design day', group:'Design Conditions', example:'15',
+   why:'Only shifts the sun\u2019s declination slightly within the month — the middle of the month is the standard convention for a representative design day.'},
+  {tab:'loads', id:'siteDB', label:'Outdoor design DB (°C)', group:'Design Conditions', example:'37',
+   why:'The peak outdoor dry-bulb temperature for your site (typically a 1%- or 2.5%-exceedance value from an ASHRAE climate design table) — the single biggest driver of conduction and infiltration load. Auto-fills from Location above and refreshes with whichever Design month is selected (this is a monthly value, not fixed to one season); override with real station data on final design documents rather than an average summer temperature.'},
+  {tab:'loads', id:'siteRange', label:'Daily range (°C)', group:'Design Conditions', example:'8',
+   why:'How far outdoor temperature swings between the daily low and high. Lets the tool build an hour-by-hour temperature curve so it can scan all 24 hours instead of assuming one fixed peak hour. Auto-fills from Location above and updates with Design month — interior divisions swing more than humid coastal ones, and the swing itself varies by season.'},
+  {tab:'loads', id:'siteClear', label:'Sky clearness (0.85–1.15)', group:'Design Conditions', example:'1.0',
+   why:'Corrects the ASHRAE clear-sky solar model for local haze/pollution/humidity. 1.0 = standard clear sky; drop to ~0.85–0.95 for hazy, humid or persistently cloudy air (e.g. Sylhet), raise toward 1.05–1.15 for drier, clearer regions (e.g. Rajshahi). Auto-fills from Location above (kept constant across months — a simplification).'},
+  {tab:'loads', id:'siteRH', label:'Outdoor design RH (%)', group:'Design Conditions', example:'65',
+   why:'Sets outdoor humidity, which combines with the indoor RH to determine how much latent (moisture) load infiltration air carries in. Auto-fills from Location above and updates with Design month — every division gets noticeably more humid in the monsoon months than in the dry season.'},
+  {tab:'loads', id:'siteTin', label:'Indoor setpoint (°C)', group:'Design Conditions', example:'24',
+   why:'Your cooling thermostat target. This sets the ΔT (outdoor − indoor) that drives conduction through every wall, roof and window — a lower setpoint means a bigger load. This is your design choice, so it stays put when you change Location or Design month above.'},
+  {tab:'loads', id:'siteTinRH', label:'Indoor RH (%)', group:'Design Conditions', example:'50',
+   why:'Sets indoor humidity, used together with outdoor RH for the latent-load side of infiltration and people. Your design choice — unaffected by the Location or Design month fields.'},
+  {tab:'loads', id:'siteSupplyDT', label:'Supply air ΔT (°C)', group:'Design Conditions', example:'11',
+   why:'How many degrees colder the supply air is than the room. A smaller ΔT needs more airflow to remove the same sensible load — this is what converts your sensible kW into the required supply air L/s for duct/AHU/fan-coil sizing. Your design choice — unaffected by the Location or Design month fields.'},
+  {tab:'loads', id:'siteWinterDB', label:'Winter outdoor design DB (°C)', group:'Design Conditions', example:'10',
+   why:'The cold-season design outdoor temperature, used only for the steady-state heating-load number (no solar gain is assumed for the winter design condition). Auto-fills from Location above using that site\u2019s coldest month — it stays put when you change the Design month above, since heating design isn\u2019t tied to whichever month you\u2019re checking cooling loads for.'},
+
+  // ---- Tab 1: Room basics ----
+  {tab:'loads', id:'roomNameInput', label:'Room name', group:'Room · Basics', example:'Guest Room 501 (corner)',
+   why:'Just a label so you can tell rooms apart in the room list, Building Summary and exported reports.'},
+  {tab:'loads', id:'roomTin', label:'Indoor setpoint override (°C)', group:'Room · Basics', example:'leave blank to use the site default', noFill:true,
+   why:'Only fill this in if this one room is kept at a different temperature than the rest of the building (e.g. a server room kept colder). Otherwise leave it blank and it inherits the site-wide setpoint.'},
+  {tab:'loads', id:'roomSafety', label:'Safety factor (%)', group:'Room · Basics', example:'10',
+   why:'Margin added on top of the calculated load for modeling uncertainty and future changes to the room. 10% is a common rule-of-thumb for preliminary sizing.'},
+
+  // ---- Tab 1: Envelope (rows) ----
+  {tab:'loads', id:'wallRows', label:'Exterior Walls: Orientation, Area, U, Absorptance', group:'Room · Envelope', example:'W · 18 m² · U=1.8 · absorptance 0.6', noFill:true,
+   why:'Orientation decides when in the day the sun hits this wall hardest (west walls peak in the afternoon, east in the morning). Area × U gives straight conduction; absorptance (how dark the surface is) sets how much sun the wall soaks up as extra "sol-air" heat — darker walls run hotter. Add one row per exterior wall; the Material Reference table on the left has typical U-values.'},
+  {tab:'loads', id:'roofRows', label:'Exposed Roof / Top Slab: Area, U, Absorptance', group:'Room · Envelope', example:'top-floor rooms only, e.g. 20 m² · U=1.2', noFill:true,
+   why:'Only add a row if this room has a roof/slab directly exposed to the sun (top floor). Roofs usually take a bigger sol-air hit than walls because the sun sits more directly overhead.'},
+  {tab:'loads', id:'glassRows', label:'Windows / Glazing: Orientation, Area, U, SHGC, Shading (IAC)', group:'Room · Envelope', example:'W · 5 m² · U=2.8 · SHGC=0.55 · IAC=0.85', noFill:true,
+   why:'Glass is usually the single biggest swing factor in a room\u2019s peak load. SHGC is the fraction of solar energy that actually gets through the glass — lower is more efficient. IAC further cuts that down for blinds/curtains (1.0 = no shading). See the Material Reference table for typical SHGC by glass type.'},
+
+  // ---- Tab 1: Internal loads ----
+  {tab:'loads', id:'roomOcc', label:'Occupants', group:'Room · Internal Loads', example:'2',
+   why:'How many people are usually in the room at the peak hour — each one adds both sensible (dry) and latent (moisture) heat.'},
+  {tab:'loads', id:'roomActSens', label:'Sensible heat / person (W)', group:'Room · Internal Loads', example:'70',
+   why:'Dry heat given off per occupant, which depends on activity level — ASHRAE tables list ~70 W sensible for seated/light-office activity, more for physical activity.'},
+  {tab:'loads', id:'roomActLat', label:'Latent heat / person (W)', group:'Room · Internal Loads', example:'45',
+   why:'Moisture-load heat given off per occupant from breathing and perspiration — also activity-dependent, typically ~45 W at light activity.'},
+  {tab:'loads', id:'roomLight', label:'Lighting (W total)', group:'Room · Internal Loads', example:'120',
+   why:'Total wattage of fixtures actually on during the peak hour — all of it ends up as sensible heat in the room. Use fixture nameplate × quantity, or a W/m² allowance × floor area if you don\u2019t have a fixture schedule yet.'},
+  {tab:'loads', id:'roomEquip', label:'Equipment (W total)', group:'Room · Internal Loads', example:'250',
+   why:'Plug loads — TVs, computers, mini-fridge, etc. Also becomes sensible heat in the room; use actual nameplate/usage-factor totals where you have them.'},
+  {tab:'loads', id:'roomInfil', label:'Infiltration (L/s)', group:'Room · Internal Loads', example:'15',
+   why:'Outdoor air leaking in around doors/windows (not intentional ventilation air). Brings in both sensible heat (temperature difference) and latent heat (humidity difference) — tighter, better-sealed rooms have lower infiltration.'},
+
+  // ---- Tab 2: Energy & Cost ----
+  {tab:'energy', id:'enPeakCool', label:'Peak sensible cooling load (kW)', group:'Energy & Cost', example:'click "↺ Pull latest from Tab 1" above the field', noFill:true,
+   why:'Anchors the whole energy estimate — the tool back-calculates an effective building UA (heat-loss coefficient) from this one peak-load number, then scales it across the year using degree-days.'},
+  {tab:'energy', id:'baseTempC', label:'Base temperature for degree-days (°C)', group:'Energy & Cost', example:'24',
+   why:'The "balance point" — usually your indoor setpoint. Degree-days measure how far outdoor temperature strays above (cooling) or below (heating) this point, summed over a month.'},
+  {tab:'energy', id:'monthGrid', label:'Monthly average outdoor dry-bulb (°C)', group:'Energy & Cost', example:'pre-filled with typical Dhaka averages — edit for your site', noFill:true,
+   why:'Feeds the degree-day sum for every month, so the tool can estimate energy across a full year rather than just at the one design-day peak. Replace with local climate-normal averages for your site.'},
+  {tab:'energy', id:'copCool', label:'Avg seasonal cooling COP', group:'Energy & Cost', example:'3.2',
+   why:'Coefficient of Performance — units of cooling delivered per unit of electricity in. Higher COP = more efficient equipment = less energy for the same load. Check the equipment datasheet, or use 3.0–3.5 as a typical split/VRF planning value.'},
+  {tab:'energy', id:'copHeat', label:'Avg seasonal heating COP/η', group:'Energy & Cost', example:'0.95',
+   why:'Same idea for heating — use ~0.95–1.0 for electric resistance heat, or the rated heating COP (often 2.5–4) for a heat pump.'},
+  {tab:'energy', id:'currSym', label:'Currency symbol', group:'Energy & Cost', example:'৳',
+   why:'Cosmetic only — labels the cost figures in the results with your local currency symbol.'},
+  {tab:'energy', id:'rateFlat', label:'Rate (per kWh)', group:'Energy & Cost', example:'10',
+   why:'Your utility\u2019s energy charge per kWh — multiplies straight into the estimated annual/monthly cost.'},
+  {tab:'energy', id:'rateFixed', label:'Fixed monthly charge', group:'Energy & Cost', example:'0',
+   why:'Any flat monthly charge your utility bills regardless of usage (demand charge, service fee), added on top of the usage-based cost.'},
+
+  // ---- Tab 3: Equipment Selection ----
+  {tab:'equip', id:'eqLoadKW', label:'Design cooling load (kW)', group:'Equipment Selection', example:'click "↺ Pull latest block load from Tab 1"', noFill:true,
+   why:'The whole-building block load (all rooms evaluated at one common worst hour) — the number the actual central plant needs to be sized against, unlike "sum of peaks" which double-counts each room\u2019s own worst hour.'},
+  {tab:'equip', id:'eqDiversity', label:'Diversity factor', group:'Equipment Selection', example:'0.9',
+   why:'Accounts for the fact that not every room hits its own peak at exactly the same time as the whole building\u2019s peak — avoids oversizing central plant equipment on pure sum-of-parts math.'},
+  {tab:'equip', id:'eqSafety', label:'Contingency / safety (%)', group:'Equipment Selection', example:'10',
+   why:'Extra margin on top of the diversified load for modeling uncertainty and future load growth.'},
+  {tab:'equip', id:'eqRedundancy', label:'Redundancy strategy', group:'Equipment Selection', example:'N+1', isSelect:true, fillValue:'n1',
+   why:'Decides how many units to install and how big each needs to be so the system keeps running if one unit fails. N+1 = one full spare; 2×50%/3×50%/4×33% spread the load so a single failure only costs a fraction of capacity.'},
+];
+window.WT_STEPS = WT_STEPS; // exposed for testing / potential future external hooks
+
+let wtIndex = 0;
+
+function wtGroupIndices(){
+  // unique ordered group names, for the jump-link strip
+  const seen=[]; WT_STEPS.forEach(s=>{ if(!seen.includes(s.group)) seen.push(s.group); });
+  return seen;
+}
+
+function wtRenderJumplinks(){
+  const groups = wtGroupIndices();
+  const currentGroup = WT_STEPS[wtIndex].group;
+  document.getElementById('wtJumplinks').innerHTML = groups.map(g=>
+    '<button data-group="'+escapeHtml(g)+'" class="'+(g===currentGroup?'current':'')+'">'+escapeHtml(g)+'</button>'
+  ).join('');
+  document.querySelectorAll('#wtJumplinks button').forEach(b=>{
+    b.addEventListener('click', ()=>{
+      const idx = WT_STEPS.findIndex(s=>s.group===b.dataset.group);
+      if(idx>=0){ wtIndex=idx; wtRenderStep(); }
+    });
+  });
+}
+
+function wtClearHighlight(){
+  document.querySelectorAll('.wt-highlight').forEach(el=> el.classList.remove('wt-highlight'));
+}
+
+function wtGoToField(step){
+  // switch to the right tab first (no-op if already active)
+  const tabBtn = document.querySelector('.tab-btn[data-tab="'+step.tab+'"]');
+  if(tabBtn && !tabBtn.classList.contains('active')) tabBtn.click();
+
+  wtClearHighlight();
+  requestAnimationFrame(()=>{
+    const el = document.getElementById(step.id);
+    if(!el) return;
+    if(typeof el.scrollIntoView === 'function') el.scrollIntoView({behavior:'smooth', block:'center'});
+    el.classList.add('wt-highlight');
+  });
+}
+
+function wtRenderStep(){
+  const step = WT_STEPS[wtIndex];
+  document.getElementById('wtGroupTitle').textContent = 'Walkthrough';
+  document.getElementById('wtGroup').textContent = step.group;
+  document.getElementById('wtLabel').textContent = step.label;
+  document.getElementById('wtExample').textContent = step.example;
+  document.getElementById('wtWhy').textContent = step.why;
+  document.getElementById('wtCounter').textContent = 'Step '+(wtIndex+1)+' of '+WT_STEPS.length;
+  document.getElementById('wtProgressBar').style.width = ((wtIndex+1)/WT_STEPS.length*100)+'%';
+  document.getElementById('wtPrevBtn').disabled = (wtIndex===0);
+  document.getElementById('wtNextBtn').textContent = (wtIndex===WT_STEPS.length-1) ? 'Finish ✓' : 'Next ▶';
+
+  const fillBtn = document.getElementById('wtFillBtn');
+  fillBtn.style.display = step.noFill ? 'none' : 'inline-block';
+
+  wtRenderJumplinks();
+  wtGoToField(step);
+}
+
+function wtFillCurrent(){
+  const step = WT_STEPS[wtIndex];
+  if(step.noFill) return;
+  const el = document.getElementById(step.id);
+  if(!el) return;
+  el.value = (step.fillValue !== undefined) ? step.fillValue : step.example;
+  el.dispatchEvent(new Event('change', {bubbles:true}));
+  el.classList.add('wt-highlight');
+}
+
+function wtOpen(){
+  wtIndex = 0;
+  document.getElementById('wtPanel').classList.add('open');
+  wtRenderStep();
+}
+function wtClose(){
+  document.getElementById('wtPanel').classList.remove('open');
+  wtClearHighlight();
+}
+
+document.getElementById('wtStartBtn').addEventListener('click', wtOpen);
+document.getElementById('wtCloseBtn').addEventListener('click', wtClose);
+document.getElementById('wtPrevBtn').addEventListener('click', ()=>{ if(wtIndex>0){ wtIndex--; wtRenderStep(); } });
+document.getElementById('wtNextBtn').addEventListener('click', ()=>{
+  if(wtIndex<WT_STEPS.length-1){ wtIndex++; wtRenderStep(); } else { wtClose(); }
+});
+document.getElementById('wtFillBtn').addEventListener('click', wtFillCurrent);
+</script>
+</body>
+</html>
