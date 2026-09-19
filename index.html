@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mechanical Engineer — Portfolio</title>
+<meta name="description" content="Mechanical engineer specializing in fire protection systems — standpipe, sprinkler, fire pump, fire alarm and HVAC design tools.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;700;800;900&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12151a;
+    --ink2:#1a1f27;
+    --panel:#1a1f27;
+    --panel2:#20262f;
+    --panel-raised:#242b35;
+    --line:#2d333d;
+    --line-soft:#242a33;
+    --paper:#ece7da;
+    --paper-dim:#d9d2c0;
+    --alarm:#e0524a;
+    --amber:#f0a93c;
+    --safe:#3ecf6e;
+    --brass:#c9a24b;
+    --blue:#5b9bd9;
+    --ink-text:#e8eaed;
+    --ink-text-dim:#9aa4b2;
+    --radius:10px;
+    --display:'Big Shoulders Display', sans-serif;
+    --body:'IBM Plex Sans', system-ui, -apple-system, sans-serif;
+    --mono:'IBM Plex Mono', 'Courier New', monospace;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--ink);
+    color:var(--ink-text);
+    font-family:var(--body);
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--brass); text-decoration:none;}
+  a:hover{text-decoration:underline;}
+  img{max-width:100%;}
+  section{padding:70px 24px;}
+  .wrap{max-width:1040px; margin:0 auto;}
+
+  .eyebrow{
+    font-family:var(--mono); font-size:11px; letter-spacing:.18em;
+    color:var(--amber); text-transform:uppercase; margin:0 0 14px;
+  }
+  h1,h2,h3{font-family:var(--display); margin:0; color:var(--paper);}
+  .tag{
+    display:inline-block; font-family:var(--mono); font-size:11.5px;
+    padding:4px 11px; border-radius:20px; border:1px solid var(--line-soft);
+    color:var(--ink-text-dim); margin:0 6px 6px 0;
+  }
+
+  /* ===== Nav ===== */
+  nav.topnav{
+    position:sticky; top:0; z-index:50;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 24px;
+    background:rgba(18,21,26,.9);
+    backdrop-filter:blur(6px);
+    border-bottom:1px solid var(--line-soft);
+  }
+  nav.topnav .brand{
+    font-family:var(--display); font-weight:700; font-size:18px; color:var(--paper);
+    letter-spacing:.01em;
+  }
+  nav.topnav .links{display:flex; gap:22px;}
+  nav.topnav .links a{
+    color:var(--ink-text-dim); font-size:13.5px; font-weight:500;
+    text-decoration:none; letter-spacing:.02em;
+  }
+  nav.topnav .links a:hover{color:var(--paper);}
+
+  /* ===== Hero ===== */
+  .hero{
+    padding:100px 24px 80px;
+    text-align:center;
+    background:
+      radial-gradient(ellipse 900px 420px at 50% -10%, #1c232c 0%, var(--ink) 65%);
+    border-bottom:1px solid var(--line-soft);
+  }
+  .hero .eyebrow{justify-content:center; display:flex;}
+  .hero h1{
+    font-size:clamp(38px, 6vw, 64px);
+    font-weight:800;
+    text-transform:uppercase;
+    letter-spacing:.01em;
+    line-height:1.02;
+  }
+  .hero h1 span{color:var(--brass);}
+  .hero p.lede{
+    max-width:600px; margin:20px auto 0;
+    color:var(--ink-text-dim); font-size:16.5px;
+  }
+  .hero .cta-row{
+    display:flex; gap:12px; justify-content:center; margin-top:30px; flex-wrap:wrap;
+  }
+  .btn{
+    display:inline-block;
+    font-family:var(--body); font-weight:600; font-size:14px;
+    padding:12px 24px; border-radius:var(--radius);
+    text-decoration:none;
+    border:1px solid var(--line-soft);
+  }
+  .btn-primary{background:var(--brass); color:#1a1305; border-color:var(--brass);}
+  .btn-primary:hover{background:#dbb35f; text-decoration:none;}
+  .btn-ghost{color:var(--ink-text); border-color:var(--line-soft);}
+  .btn-ghost:hover{border-color:var(--brass); color:var(--brass); text-decoration:none;}
+
+  /* ===== About ===== */
+  .about-grid{
+    display:grid; grid-template-columns:1.3fr 1fr; gap:36px; align-items:start;
+  }
+  .about-grid p{color:var(--ink-text-dim); font-size:15.5px; max-width:60ch;}
+  .stat-list{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+  .stat{
+    background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius);
+    padding:16px 18px;
+  }
+  .stat .num{font-family:var(--display); font-size:26px; color:var(--brass); line-height:1;}
+  .stat .label{font-size:12px; color:var(--ink-text-dim); margin-top:6px; letter-spacing:.02em;}
+
+  /* ===== Expertise ===== */
+  .exp-grid{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(230px,1fr)); gap:16px;
+  }
+  .exp-card{
+    background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius);
+    padding:20px 22px;
+  }
+  .exp-card h3{font-size:16.5px; margin-bottom:8px; color:var(--ink-text); text-transform:none;}
+  .exp-card p{font-size:13.5px; color:var(--ink-text-dim); margin:0 0 12px;}
+
+  /* ===== Tools ===== */
+  .tools-grid{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(240px,1fr)); gap:18px;
+  }
+  .tool-card{
+    display:flex; flex-direction:column;
+    background:var(--panel); border:1px solid var(--line-soft); border-left:4px solid var(--amber);
+    border-radius:var(--radius); padding:20px 22px;
+    transition:transform .15s ease, border-color .15s ease;
+  }
+  .tool-card:hover{transform:translateY(-3px); border-left-color:var(--brass);}
+  .tool-card .tool-kind{font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-text-dim); margin-bottom:10px;}
+  .tool-card h3{font-size:18px; margin-bottom:8px; text-transform:none;}
+  .tool-card p{font-size:13.5px; color:var(--ink-text-dim); flex:1; margin:0 0 16px;}
+  .tool-card .open{
+    font-family:var(--mono); font-size:12.5px; font-weight:500; color:var(--brass);
+    display:inline-flex; align-items:center; gap:6px;
+  }
+  .tool-card:hover .open{text-decoration:underline;}
+
+  /* ===== Contact ===== */
+  .contact-card{
+    background:var(--panel); border:1px solid var(--line-soft); border-radius:var(--radius);
+    padding:30px 28px; text-align:center;
+  }
+  .contact-card h2{font-size:26px; text-transform:uppercase;}
+  .contact-card p{color:var(--ink-text-dim); max-width:46ch; margin:10px auto 22px;}
+  .contact-links{display:flex; gap:14px; justify-content:center; flex-wrap:wrap;}
+  .contact-links a{
+    font-family:var(--mono); font-size:13px; padding:9px 16px; border:1px solid var(--line-soft);
+    border-radius:20px; color:var(--ink-text);
+  }
+  .contact-links a:hover{border-color:var(--brass); color:var(--brass); text-decoration:none;}
+
+  footer{
+    text-align:center; padding:28px 24px; font-size:12px; color:var(--ink-text-dim);
+    border-top:1px solid var(--line-soft);
+  }
+
+  @media (max-width:720px){
+    .about-grid{grid-template-columns:1fr;}
+    nav.topnav .links{gap:14px;}
+    section{padding:50px 18px;}
+  }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="brand"><!-- EDIT: your name/initials --> Your Name</div>
+  <div class="links">
+    <a href="#about">About</a>
+    <a href="#expertise">Expertise</a>
+    <a href="#tools">Tools</a>
+    <a href="#contact">Contact</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="eyebrow">Mechanical Engineer</div>
+  <h1>Fire Protection &amp;<br><span>Mechanical Systems</span></h1>
+  <p class="lede"><!-- EDIT: your tagline -->
+    I design and calculate fire protection and mechanical systems — standpipe, sprinkler,
+    fire pump, fire alarm and HVAC — and build the tools that make that work faster and more accurate.
+  </p>
+  <div class="cta-row">
+    <a href="#tools" class="btn btn-primary">View Tools</a>
+    <a href="#contact" class="btn btn-ghost">Get in Touch</a>
+  </div>
+</header>
+
+<section id="about">
+  <div class="wrap about-grid">
+    <div>
+      <div class="eyebrow">About</div>
+      <h2 style="text-transform:uppercase; font-size:28px; margin-bottom:14px;">Background</h2>
+      <p><!-- EDIT: your bio -->
+        Mechanical engineer working across fire protection and mechanical (HVAC) design for
+        real building projects, including hotel-type developments. Work spans hydraulic
+        calculations, equipment sizing, and code-compliant design to NFPA 13, 14, 20 and 72,
+        alongside building the calculation tools and reference guides used to do that work
+        accurately and consistently.
+      </p>
+      <div style="margin-top:16px;">
+        <span class="tag">NFPA 13 — Sprinklers</span>
+        <span class="tag">NFPA 14 — Standpipe</span>
+        <span class="tag">NFPA 20 — Fire Pumps</span>
+        <span class="tag">NFPA 72 — Fire Alarm</span>
+        <span class="tag">HVAC Design</span>
+      </div>
+    </div>
+    <div class="stat-list">
+      <div class="stat"><div class="num">1.5+</div><div class="label">Years in fire protection engineering</div></div>
+      <div class="stat"><div class="num">4</div><div class="label">Standards worked to daily (13/14/20/72)</div></div>
+      <div class="stat"><div class="num">4</div><div class="label">In-house calculation tools built</div></div>
+      <div class="stat"><div class="num">100%</div><div class="label">Built and run in the browser</div></div>
+    </div>
+  </div>
+</section>
+
+<section id="expertise" style="background:var(--ink2); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft);">
+  <div class="wrap">
+    <div class="eyebrow">Expertise</div>
+    <h2 style="text-transform:uppercase; font-size:28px; margin-bottom:24px;">What I Work On</h2>
+    <div class="exp-grid">
+      <div class="exp-card">
+        <h3>Fire Sprinkler Design</h3>
+        <p>Hydraulic calculations, spacing and placement to NFPA 13, sized for occupancy and hazard classification.</p>
+      </div>
+      <div class="exp-card">
+        <h3>Standpipe &amp; Fire Pump</h3>
+        <p>Standpipe system layout, pressure-reducing valve sizing, and fire pump selection to NFPA 14 and 20.</p>
+      </div>
+      <div class="exp-card">
+        <h3>Fire Alarm Systems</h3>
+        <p>Battery standby/alarm load sizing and NAC circuit voltage-drop calculations to NFPA 72.</p>
+      </div>
+      <div class="exp-card">
+        <h3>HVAC Design</h3>
+        <p>Zone load calculation, equipment sizing, and energy/cost estimation for mechanical systems.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="tools">
+  <div class="wrap">
+    <div class="eyebrow">Tools</div>
+    <h2 style="text-transform:uppercase; font-size:28px; margin-bottom:6px;">Engineering Tools</h2>
+    <p style="color:var(--ink-text-dim); font-size:14.5px; margin:0 0 26px; max-width:60ch;">
+      Self-contained calculators and reference tools — open any of these directly, no install required.
+    </p>
+    <div class="tools-grid">
+      <a class="tool-card" href="fire_rules_V3.html">
+        <div class="tool-kind">Field Reference</div>
+        <h3>NFPA Fire Protection Field Reference</h3>
+        <p>Quick-lookup guide to NFPA 13, 14, 20 and 72 — spacing, hydraulics, pump and alarm requirements.</p>
+        <span class="open">Open tool →</span>
+      </a>
+      <a class="tool-card" href="fire_alarm_battery_NAC_voltage_drop_.html">
+        <div class="tool-kind">Calculator</div>
+        <h3>Fire Alarm Battery &amp; NAC Voltage Drop</h3>
+        <p>Standby/alarm battery sizing and notification-circuit voltage-drop calculations to NFPA 72.</p>
+        <span class="open">Open tool →</span>
+      </a>
+      <a class="tool-card" href="hvac_design_suite_V6.html">
+        <div class="tool-kind">Design Tool</div>
+        <h3>HVAC Design Suite</h3>
+        <p>Zone load calculation, energy/cost estimation, and equipment sizing for mechanical systems.</p>
+        <span class="open">Open tool →</span>
+      </a>
+      <a class="tool-card" href="fire_protection_consultant_mastery_all_levels.html">
+        <div class="tool-kind">Study Set</div>
+        <h3>Fire Protection Consultant Mastery</h3>
+        <p>Self-paced walkthrough of NFPA 13/14/20/24/72/101 and Saudi SBC 201/801, with quizzes and drills.</p>
+        <span class="open">Open tool →</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="contact" style="background:var(--ink2); border-top:1px solid var(--line-soft);">
+  <div class="wrap">
+    <div class="contact-card">
+      <div class="eyebrow" style="justify-content:center; display:flex;">Contact</div>
+      <h2>Let's Talk</h2>
+      <p><!-- EDIT: your contact blurb -->
+        Open to fire protection and mechanical design work, consulting, and collaboration.
+      </p>
+      <div class="contact-links">
+        <a href="mailto:you@example.com"><!-- EDIT --> you@example.com</a>
+        <a href="tel:+8800000000"><!-- EDIT --> +880 000 000</a>
+        <a href="https://linkedin.com/in/yourprofile" target="_blank" rel="noopener"><!-- EDIT --> LinkedIn</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  &copy; <span id="year"></span> <!-- EDIT: your name -->Your Name. Built and maintained independently.
+</footer>
+
+<script>
+  document.getElementById("year").textContent = new Date().getFullYear();
+</script>
+</body>
+</html>
